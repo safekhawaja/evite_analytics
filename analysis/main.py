@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from sklearn.linear_model import LinearRegression
+# from sklearn.preprocessing import PolynomialFeatures
 import matplotlib.pyplot as plt
 from datetime import datetime
 
@@ -12,7 +13,11 @@ evite["date"] = evite.apply(lambda x: datetime.strptime(x["date"][0:7], "%d%b%y"
 
 print(evite.columns.values.tolist())
 
-columns = evite[["date", "events"]].to_numpy()
+evite.describe()
+
+columns_date = evite["date"].to_numpy()
+columns_events = evite["events"].to_numpy()
+
 # evite.head()
 
 # evite.plot()
@@ -22,6 +27,11 @@ x = np.array(columns["date"])
 y = np.array(columns["events"])
 
 model = LinearRegression().fit(x, y)
+
+# regression = linear_model.LinearRegression(degree=2) or:
+# poly = PolynomialFeatures(degree=2)
+# X_ = poly.fit_transform(X)
+# predict_ = poly.fit_transform(predict)
 
 # r_sq = model.score(x, y)
 
