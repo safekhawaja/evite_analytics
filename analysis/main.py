@@ -3,7 +3,7 @@ import pandas as pd
 from sklearn.linear_model import LinearRegression
 import matplotlib.pyplot as plt
 
-evite = pd.read_csv("data/air_quality_no2.csv", index_col=0, parse_dates=True)
+evite = pd.read_csv("/Users/saif/Downloads/data_cleaned_for_class.csv", index_col=0, parse_dates=True)
 
 evite.head()
 
@@ -11,9 +11,29 @@ evite.plot()
 
 evite.plot.box()
 
-fig, axs = plt.subplots(figsize=(12, 4))
+x = np.array([5, 15, 25, 35, 45, 55]).reshape((-1, 1))
+y = np.array([5, 20, 14, 32, 22, 38])
 
-evite.plot.area(ax=axs)
+model = LinearRegression().fit(x, y)
+
+r_sq = model.score(x, y)
+
+print('coefficient of determination:', r_sq)
+
+print('intercept:', model.intercept_)
+print('slope:', model.coef_)
+
+y_pred = model.intercept_ + model.coef_ * x
+print('predicted response:', y_pred, sep='\n')
+
+plt.plot(x, y, color='#444444', linestyle='--', label='')
+
+plt.xlabel('x')
+plt.ylabel('y')
+plt.title('Test Data')
+
+plt.savefig('plot.png')
+plt.show()
 
 '''
 evite.shape
