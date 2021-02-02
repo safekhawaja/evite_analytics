@@ -13,26 +13,26 @@ columns = evite[["date", "events"]].to_numpy()
 # evite.plot()
 # evite.plot.box()
 
-x = np.array([5, 15, 25, 35, 45, 55]).reshape((-1, 1))
-y = np.array([5, 20, 14, 32, 22, 38])
+# x = np.array([5, 15, 25, 35, 45, 55]).reshape((-1, 1))
+# y = np.array([5, 20, 14, 32, 22, 38])
 
-model = LinearRegression().fit(columns[0], columns[1])
+model = LinearRegression().fit(columns["date"], columns["events"])
 
-r_sq = model.score(x, y)
+# r_sq = model.score(x, y)
 
 # print('coefficient of determination:', r_sq)
 
 # print('intercept:', model.intercept_)
 # print('slope:', model.coef_)
 
-y_pred = model.intercept_ + model.coef_ * x
+# y_pred = model.intercept_ + model.coef_ * x
 # print('predicted response:', y_pred, sep='\n')
 
 # plt.plot(x, y, color='#444444', linestyle='--', label='')
 
-plt.xlabel('x')
-plt.ylabel('y')
-plt.title('Test Data')
+plt.xlabel('date')
+plt.ylabel('events')
+plt.title('Test Regression')
 
 # plt.savefig('plot.png')
 # plt.show()
