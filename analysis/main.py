@@ -9,7 +9,7 @@ evite["date"] = evite.apply(lambda x: datetime.strptime(x["date"][0:7], "%d%b%y"
 
 print(evite.columns.values.tolist())
 
-column_date = evite["date"].to_numpy()
+columns = evite[["date", "events"]].to_numpy()
 # evite.head()
 
 # evite.plot()
@@ -18,7 +18,7 @@ column_date = evite["date"].to_numpy()
 x = np.array([5, 15, 25, 35, 45, 55]).reshape((-1, 1))
 y = np.array([5, 20, 14, 32, 22, 38])
 
-model = LinearRegression().fit(x, y)
+model = LinearRegression().fit(columns[0], columns[1])
 
 r_sq = model.score(x, y)
 
