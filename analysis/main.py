@@ -15,10 +15,10 @@ columns = evite[["date", "events"]].to_numpy()
 # evite.plot()
 # evite.plot.box()
 
-# x = np.array([5, 15, 25, 35, 45, 55]).reshape((-1, 1))
-# y = np.array([5, 20, 14, 32, 22, 38])
+x = np.array(columns["date"])
+y = np.array(columns["events"])
 
-model = LinearRegression().fit(columns["date"], columns["events"])
+model = LinearRegression().fit(x, y)
 
 # r_sq = model.score(x, y)
 
