@@ -7,7 +7,7 @@ evite = pd.read_csv("/Users/saif/Downloads/data_cleaned_for_class.csv", index_co
 
 print(evite.columns.values.tolist())
 
-column_date = evite["date"].to_numpy()
+columns = evite[["date", "events"]].to_numpy()
 # evite.head()
 
 # evite.plot()
