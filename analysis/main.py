@@ -11,23 +11,19 @@ from datetime import datetime
 evite = pd.read_csv("/Users/saif/Downloads/data_cleaned_for_class.csv", index_col=0, parse_dates=True)
 evite["date"] = evite.apply(lambda x: datetime.strptime(x["date"][0:7], "%d%b%y"), axis=1)
 
-print(evite.columns.values.tolist())
+# print(evite.columns.values.tolist())
 
-evite.describe()
+# evite.describe()
 
 columns_date = evite["date"].to_numpy()
 columns_events = evite["events"].to_numpy()
 
-# evite.head()
+cd2d = columns_date.reshape(1, -1)
+ce2d = columns_events.reshape(1, -1)
 
-# evite.plot()
-# evite.plot.box()
+model = LinearRegression().fit(cd2d, ce2d)
 
-x = np.array(columns["date"])
-y = np.array(columns["events"])
-
-model = LinearRegression().fit(x, y)
-
+'''
 # regression = linear_model.LinearRegression(degree=2) or:
 # poly = PolynomialFeatures(degree=2)
 # X_ = poly.fit_transform(X)
@@ -52,7 +48,6 @@ plt.title('Test Regression')
 # plt.savefig('plot.png')
 # plt.show()
 
-'''
 evite.shape
 
 evite.count()
