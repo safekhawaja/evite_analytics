@@ -10,7 +10,7 @@ from datetime import datetime
 
 evite = pd.read_csv("/Users/saif/Downloads/data_cleaned_for_class.csv", index_col=0, parse_dates=True)
 evite["date"] = evite.apply(lambda x: datetime.strptime(x["date"][0:7], "%d%b%y"), axis=1)
-
+ 
 # print(evite.columns.values.tolist())
 
 # evite.describe()
@@ -20,10 +20,13 @@ columns_events = evite["events"].to_numpy()
 
 breakpoint()
 
-cd2d = columns_date.reshape(1, -1)
-ce2d = columns_events.reshape(1, -1)
+cd2d = columns_date.reshape(-1, 1)
+ce2d = columns_events.reshape(-1, 1)
 
-model = LinearRegression().fit(cd2d, ce2d)
+lin_reg = LinearRegression()
+model = lin_reg.fit(cd2d, ce2d)
+
+# r2_score(x, y)
 
 '''
 # regression = linear_model.LinearRegression(degree=2) or:
