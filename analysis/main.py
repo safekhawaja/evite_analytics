@@ -18,6 +18,8 @@ evite["date"] = evite.apply(lambda x: datetime.strptime(x["date"][0:7], "%d%b%y"
 columns_date = evite["date"].to_numpy()
 columns_events = evite["events"].to_numpy()
 
+breakpoint()
+
 cd2d = columns_date.reshape(1, -1)
 ce2d = columns_events.reshape(1, -1)
 
