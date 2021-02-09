@@ -35,8 +35,8 @@ print('coefficient of determination:', r_sq)
 knn = KNeighborsRegressor(n_neighbors=3)
 knn.fit(cd2d, ce2d)
 
-print(knn.predict(test_data[:3]))
-print(knn.score(test_data, test_labels))
+print(knn.predict(cd2d[:3]))
+print(knn.score(cd2d, ce2d))
 
 '''
 # regression = linear_model.LinearRegression(degree=2) or:
