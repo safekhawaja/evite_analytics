@@ -45,7 +45,9 @@ for_factor_analysis <- df_bc %>%
            'UnempRate', 'HighschoolRate', 'BachelorsRate',
            'irs_estimated_population_2015')) %>%
   select_if(is.numeric)
-principal(for_factor_analysis, nfactors=38, rotate="none", scores=TRUE, missing=TRUE, impute="median")
+
+# Uncomment if you want to verify that there are nine factors (SS Loadings >= 1)
+# principal(for_factor_analysis, nfactors=38, rotate="none", scores=TRUE, missing=TRUE, impute="median")
 
 # Looks like there are nine factors (SS Loadings >= 1)
 # Adding missing=TRUE to impute missing values.
@@ -82,30 +84,30 @@ df_bc <- bind_cols(df_bc, pc_scores)
 ###############################
 # Income-related numeric fields
 
-for_factor_analysis <- combined_df %>%
-  select(c('IncomeBucket1',
-           'IncomeBucket2', 'IncomeBucket3', 'IncomeBucket4', 'IncomeBucket5',
-           'IncomeBucket6', 'IncomeBucket7', 'IncomeBucket8', 'IncomeBucket9',
-           'IncomeBucket10')) %>%
-  select_if(is.numeric) %>%
-  drop_na()
-principal(for_factor_analysis, nfactors=5, rotate="none")
-
-principal(for_factor_analysis, nfactors=2)
+# for_factor_analysis <- combined_df %>%
+#   select(c('IncomeBucket1',
+#            'IncomeBucket2', 'IncomeBucket3', 'IncomeBucket4', 'IncomeBucket5',
+#            'IncomeBucket6', 'IncomeBucket7', 'IncomeBucket8', 'IncomeBucket9',
+#            'IncomeBucket10')) %>%
+#   select_if(is.numeric) %>%
+#   drop_na()
+# principal(for_factor_analysis, nfactors=5, rotate="none")
+#
+# principal(for_factor_analysis, nfactors=2)
 
 ###################
 # Percentage fields
 
-for_factor_analysis <- combined_df %>%
-  select(c('PercPopUnder18', 'PercPopOver65', 'PercWhite', 'PercBlack',
-           'PercAsian', 'PercLatino', 'PercInsured', 'Perc_HHsAbSixtyFive',
-           'Perc_HHsBelEighteen', 'UnempRate', 'HighschoolRate', 'BachelorsRate',
-           'irs_estimated_population_2015')) %>%
-  select_if(is.numeric) %>%
-  drop_na()
-principal(for_factor_analysis, nfactors=8, rotate="none")
-
-principal(for_factor_analysis, nfactors=4)
+# for_factor_analysis <- combined_df %>%
+#     select(c('PercPopUnder18', 'PercPopOver65', 'PercWhite', 'PercBlack',
+#              'PercAsian', 'PercLatino', 'PercInsured', 'Perc_HHsAbSixtyFive',
+#              'Perc_HHsBelEighteen', 'UnempRate', 'HighschoolRate', 'BachelorsRate',
+#              'irs_estimated_population_2015')) %>%
+#     select_if(is.numeric) %>%
+#     drop_na()
+# principal(for_factor_analysis, nfactors=8, rotate="none")
+#
+# principal(for_factor_analysis, nfactors=4)
 
 ####################################################################
 # Dummy variables for non-location covariates
