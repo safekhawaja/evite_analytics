@@ -3,3 +3,4 @@
 .RData
 .Ruserdata
 analysis/combined_df.csv
+analysis/df_bc_desiredcovariates.csv

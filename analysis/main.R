@@ -158,13 +158,15 @@ MAPE(df_bc$events + 1, lin$fitted.values %>% sapply(function(x) max(x, 0)))
 # Dummy variables for location covariates (e.g. states)
 ####################################################################
 
-# Filtering down to only the desired covariates
-desired_covariates <- df_bc %>% select(events,
+# Filtering down to only the desired covariates and the index (ZIP)
+desired_covariates <- df_bc %>% select(ZIP, events,
                                     RC1, RC2, RC3, RC4, RC5, RC6, RC7,
                                     RC8, RC9,
                                     January, February, March, April,
                                     May, June, July, August, September,
                                     October, November, December)
+
+# write_csv(desired_covariates, "df_bc_desiredcovariates.csv")
 
 # Creating indicator variables for states
 lin <- lm(events ~ ., bind_cols(desired_covariates,
@@ -173,7 +175,7 @@ lin <- lm(events ~ ., bind_cols(desired_covariates,
 )
 summary(lin)
 
-# Adding dummy variables for states increases R^2 but decreases MAPE.
+# Adding dummy variables for states increases R^2 (good) but increases MAPE (bad.
 MAPE(df_bc$events + 1, lin$fitted.values)
 MAPE(df_bc$events + 1, lin$fitted.values %>% sapply(function(x) max(x, 0)))
 
@@ -194,6 +196,59 @@ summary(lin)
 MAPE(df_bc$events + 1, lin$fitted.values)
 MAPE(df_bc$events + 1, lin$fitted.values %>% sapply(function(x) max(x, 0)))
 
+####################################################################
+# Step-wise regression
+####################################################################
+
+##############################
+# Forward step-wise regression
+
+intercept_only <- lm(events ~ 1, data=desired_covariates)
+all <- lm(events ~ . - ZIP, data=desired_covariates)
+
+forward <- step(intercept_only, direction='forward', scope=formula(all), trace=1)
+
+#view results of forward stepwise regression
+forward$anova
+
+# Performance is not much better than using all the covariates in desired_covariates
+MAPE(df_bc$events + 1, forward$fitted.values)
+MAPE(df_bc$events + 1, forward$fitted.values %>% sapply(function(x) max(x, 0)))
+
+###############################
+# Backward step-wise regression
+
+intercept_only <- lm(events ~ 1, data=desired_covariates)
+all <- lm(events ~ . - ZIP, data=desired_covariates)
+
+backward <- step(all, direction='backward', scope=formula(all), trace=1)
+
+#view results of backward stepwise regression - in this case, the same as forward step-wise
+backward$anova
+
+# These match the forward step-wise because the backward step-wise produces the same model
+MAPE(df_bc$events + 1, backward$fitted.values)
+MAPE(df_bc$events + 1, backward$fitted.values %>% sapply(function(x) max(x, 0)))
+
+#######################################
+# Forward-Backward step-wise regression
+
+intercept_only <- lm(events ~ 1, data=desired_covariates)
+all <- lm(events ~ . - ZIP, data=desired_covariates)
+
+both <- step(intercept_only, direction='both', scope=formula(all), trace=1)
+
+#view final model - in this case, the same as forward step-wise
+both$coefficients
+
+# These match the previous step-wises because they all produce the same model
+MAPE(df_bc$events + 1, both$fitted.values)
+MAPE(df_bc$events + 1, both$fitted.values %>% sapply(function(x) max(x, 0)))
+
+#######################################
+# Results of step-wise regression
+
+summary(both)
 
 ####################################################################
 # Code from MKTG 212
