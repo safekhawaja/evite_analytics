@@ -10,6 +10,8 @@ library(tidyverse)
 ## Factor analysis (reducing number of coefficients)
 ## Customer lifetime value: continuous, non-contractual
 ### Although our data is discretized.
+## Interaction variables
+## Decision trees
 
 
 orig_df <- read_csv("data_cleaned_for_class.csv")
