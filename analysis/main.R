@@ -19,6 +19,21 @@ combined_df = as_tibble(read.csv("combined_df.csv"))
 df <- combined_df # Before and after Covid.
 df$date <- substr(combined_df$date, 1, 7) %>% lubridate::dmy()
 df$month <- lubridate::month(df$date)
+df$UnempRate <- as.numeric(df$UnempRate) / 100
+
+# Standardizing numeric fields.  mean zero, variance one.
+df <- df %>% mutate_at(c('Pop', 'ZipArea', 'Density', 'SexRatio', 'MedianAge',
+                         'PercPopUnder18', 'PercPopOver65', 'PercWhite', 'PercBlack',
+                         'PercAsian', 'PercLatino', 'HousingUnits', 'IncomeBucket1',
+                         'IncomeBucket2', 'IncomeBucket3', 'IncomeBucket4', 'IncomeBucket5',
+                         'IncomeBucket6', 'IncomeBucket7', 'IncomeBucket8', 'IncomeBucket9',
+                         'IncomeBucket10',
+                         'MedianHHIncome', 'MeanHHIncome', 'PercInsured', 'TotalHHs',
+                         'FamHHs', 'Perc_HHsAbSixtyFive', 'Perc_HHsBelEighteen', 'AvgHHSize',
+                         'AvgFamSize', 'AvgBirthRate', 'HHwGrandpar', 'HHswComp', 'HHwInt',
+                         'UnempRate', 'HighschoolRate', 'BachelorsRate',
+                         'irs_estimated_population_2015'),
+                       ~(scale(.) %>% as.vector))
 
 df_bc <- df[df$after_covid == 0,] # Before Covid.
 
@@ -62,7 +77,7 @@ pc
 # RC6: white (<=-0.75: PercWhite; >=0.85: PercBlack)
 # RC8: density / Latino percentage (>=0.49: Density, PercLatino)
 # RC7: sex (>=0.80: SexRatio)
-# RC9: zip code area (<=-0.75: ZipArea)
+# RC9: zip code area (>=-0.70: ZipArea)
 
 pc_scores <- as_tibble(pc$scores)
 
