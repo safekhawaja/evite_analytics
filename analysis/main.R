@@ -266,85 +266,53 @@ MAPE(df_bc$events + 1, both$fitted.values %>% sapply(function(x) max(x, 0)))
 summary(both)
 
 ####################################################################
-# Code from MKTG 212
+# Cluster analysis
+####################################################################
 
-library(tidyverse)
-library(psych)
+# Before Covid.
+ctr <- kmeans(df_bc %>% group_by(ZIP) %>%
+           summarise(IncomeBucket1 = mean(IncomeBucket1),
+                     IncomeBucket2 = mean(IncomeBucket2),
+                     IncomeBucket3 = mean(IncomeBucket3),
+                     IncomeBucket4 = mean(IncomeBucket4),
+                     IncomeBucket5 = mean(IncomeBucket5),
+                     IncomeBucket6 = mean(IncomeBucket6),
+                     IncomeBucket7 = mean(IncomeBucket7),
+                     IncomeBucket8 = mean(IncomeBucket8),
+                     IncomeBucket9 = mean(IncomeBucket9),
+                     IncomeBucket10 = mean(IncomeBucket10)
+           ), centers = 3)
+ctr
 
-car = read.csv("car_data.csv")
-combined_df = as_tibble(read.csv("combined_df.csv"))
-# snapshot of the data:
-head(car)
+df_bc$cluster <- ctr$cluster
 
-#the first time you run this, you may need to install the psych package
-#install.packages('psych')
+# Low-income, middle-income, and high-income clusters.
 
-library(psych)
+by_cluster <- df_bc %>% group_by(date, cluster) %>% summarise(total_events = sum(events))
+# by_cluster$cluster <- sapply(by_cluster$cluster, function(x) ifelse(x==1, "High-income", ifelse(x==2, "Low-income", "Middle-income")))
 
-# We want to determine how many factors apply to the dataset for Q1-Q17
+ggplot(data = by_cluster, aes(x=date, y=total_events)) + geom_line(aes(colour=cluster))
 
-principal(car [,4:20],nfactors=17,rotate = "none") # we assume that there n factors for n output
-# > observe that there are 14 elements in the output that are less than 1.
-# > this implies that they are not significant
-# > excluding these values, we would only need 3
+# Before and after Covid.
+ctr <- kmeans(df %>% group_by(ZIP) %>%
+                  summarise(IncomeBucket1 = mean(IncomeBucket1),
+                            IncomeBucket2 = mean(IncomeBucket2),
+                            IncomeBucket3 = mean(IncomeBucket3),
+                            IncomeBucket4 = mean(IncomeBucket4),
+                            IncomeBucket5 = mean(IncomeBucket5),
+                            IncomeBucket6 = mean(IncomeBucket6),
+                            IncomeBucket7 = mean(IncomeBucket7),
+                            IncomeBucket8 = mean(IncomeBucket8),
+                            IncomeBucket9 = mean(IncomeBucket9),
+                            IncomeBucket10 = mean(IncomeBucket10)
+                  ), centers = 3)
+ctr
 
-# therefore,
-principal(car [,4:20],nfactors=3,rotate = "none")
-# > observe that all SS loading entries for PC1 -> PC3 are >= 1
+df$cluster <- ctr$cluster
 
-# We now assert that there are 3 factors in the dataset.
-# This implies that:
-# Qx = RC1 * PC1 + RC2 * PC2 + RC3 * PC3
-# Qy = RC1 * PC1 + RC2 * PC2 + RC3 * PC3
-# Qz = RC1 * PC1 + RC2 * PC2 + RC3 * PC3
-# The list of dependent variables are Q1 -> Q17
-pc3=principal(car [,4:20],nfactors=3)
-pc3
+# Low-income, middle-income, and high-income clusters.
 
-pc3$scores
+by_cluster <- df %>% group_by(date, cluster) %>% summarise(total_events = sum(events))
+# by_cluster$cluster <- sapply(by_cluster$cluster, function(x) ifelse(x==1, "High-income", ifelse(x==3, "Middle-income", "Low-income")))
 
-# We take the summary of the linear model
-# for each Qx output versus PC1, RC1, PC2, RC2, PC3 and RC3
-# and we observe that all p-values are <= 0.05
-# Therefore we declare that the model rejects the null
-# hypothesis and that there is a correlation.
-summary(lm(car$Q1 ~ pc3$scores))
-summary(lm(car$Q2 ~ pc3$scores))
-summary(lm(car$Q3 ~ pc3$scores))
-summary(lm(car$Q4 ~ pc3$scores))
-summary(lm(car$Q5 ~ pc3$scores))
-summary(lm(car$Q6 ~ pc3$scores))
-summary(lm(car$Q7 ~ pc3$scores))
-summary(lm(car$Q8 ~ pc3$scores))
-summary(lm(car$Q9 ~ pc3$scores))
-summary(lm(car$Q10 ~ pc3$scores))
-summary(lm(car$Q11 ~ pc3$scores))
-summary(lm(car$Q12 ~ pc3$scores))
-summary(lm(car$Q13 ~ pc3$scores))
-summary(lm(car$Q14 ~ pc3$scores))
-summary(lm(car$Q15 ~ pc3$scores))
-summary(lm(car$Q16 ~ pc3$scores))
-summary(lm(car$Q17 ~ pc3$scores))
-
-pc3
-pc3$scores
-
-
-car = read.csv("car_data.csv")
-library(psych)
-
-principal(car [,4:20],nfactors=17,rotate = "none")
-principal(car [,4:20],nfactors=3,rotate = "none")
-
-pc3=principal(car [,4:20],nfactors=3)
-RC1 = pc$scores[,1]
-RC2 = pc3$scores[,2]
-RC3 = pc3$scores[,3]
-
-plot(RC1,RC2,main="RC1 vs RC2")
-plot(RC1,RC3,main="RC1 vs RC3")
-plot(RC2,RC3,main="RC2 vs RC3")
-
-# Improved regression.
-lin <- lm(car.Ideal_Price ~ ., data.frame(car$Ideal_Price, RC1, RC2, RC3))
-summary(lin)
+ggplot(data = by_cluster, aes(x=date, y=total_events)) + geom_line(aes(colour=cluster))
