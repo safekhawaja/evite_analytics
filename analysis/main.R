@@ -22,20 +22,21 @@ df$month <- lubridate::month(df$date)
 df$UnempRate <- as.numeric(df$UnempRate) / 100
 
 # Standardizing numeric fields.  mean zero, variance one.
-df <- df %>% mutate_at(c('Pop', 'ZipArea', 'Density', 'SexRatio', 'MedianAge',
-                         'PercPopUnder18', 'PercPopOver65', 'PercWhite', 'PercBlack',
-                         'PercAsian', 'PercLatino', 'HousingUnits', 'IncomeBucket1',
-                         'IncomeBucket2', 'IncomeBucket3', 'IncomeBucket4', 'IncomeBucket5',
-                         'IncomeBucket6', 'IncomeBucket7', 'IncomeBucket8', 'IncomeBucket9',
-                         'IncomeBucket10',
-                         'MedianHHIncome', 'MeanHHIncome', 'PercInsured', 'TotalHHs',
-                         'FamHHs', 'Perc_HHsAbSixtyFive', 'Perc_HHsBelEighteen', 'AvgHHSize',
-                         'AvgFamSize', 'AvgBirthRate', 'HHwGrandpar', 'HHswComp', 'HHwInt',
-                         'UnempRate', 'HighschoolRate', 'BachelorsRate',
-                         'irs_estimated_population_2015'),
-                       ~(scale(.) %>% as.vector))
+# df <- df %>% mutate_at(c('Pop', 'ZipArea', 'Density', 'SexRatio', 'MedianAge',
+#                          'PercPopUnder18', 'PercPopOver65', 'PercWhite', 'PercBlack',
+#                          'PercAsian', 'PercLatino', 'HousingUnits', 'IncomeBucket1',
+#                          'IncomeBucket2', 'IncomeBucket3', 'IncomeBucket4', 'IncomeBucket5',
+#                          'IncomeBucket6', 'IncomeBucket7', 'IncomeBucket8', 'IncomeBucket9',
+#                          'IncomeBucket10',
+#                          'MedianHHIncome', 'MeanHHIncome', 'PercInsured', 'TotalHHs',
+#                          'FamHHs', 'Perc_HHsAbSixtyFive', 'Perc_HHsBelEighteen', 'AvgHHSize',
+#                          'AvgFamSize', 'AvgBirthRate', 'HHwGrandpar', 'HHswComp', 'HHwInt',
+#                          'UnempRate', 'HighschoolRate', 'BachelorsRate',
+#                          'irs_estimated_population_2015'),
+#                        ~(scale(.) %>% as.vector))
 
 df_bc <- df[df$after_covid == 0,] # Before Covid.
+df_ac <- df[df$after_covid == 1,] # After Covid.
 
 ####################################################################
 # Factor analysis
@@ -269,6 +270,10 @@ summary(both)
 # Cluster analysis
 ####################################################################
 
+# Please note that the cluster analyis will create the same clusters
+# each time if run on the same dataset, but it may create them in
+# different orders.
+
 # Before Covid.
 ctr <- kmeans(df_bc %>% group_by(ZIP) %>%
            summarise(IncomeBucket1 = mean(IncomeBucket1),
@@ -316,3 +321,52 @@ by_cluster <- df %>% group_by(date, cluster) %>% summarise(total_events = sum(ev
 # by_cluster$cluster <- sapply(by_cluster$cluster, function(x) ifelse(x==1, "High-income", ifelse(x==3, "Middle-income", "Low-income")))
 
 ggplot(data = by_cluster, aes(x=date, y=total_events)) + geom_line(aes(colour=cluster))
+
+####################################################################
+# Miscellaneous analysis
+####################################################################
+
+df_bc_events <- df_bc %>% group_by(ZIP) %>% summarise(total_events = sum(events))
+df_ac_events <- df_ac %>% group_by(ZIP) %>% summarise(total_events = sum(events))
+
+df_ac_events[df_bc_events$total_events < df_ac_events$total_events,]$total_events
+
+####################################################################
+# Pareto charts - super cool!
+####################################################################
+
+# Before Covid.
+df_bc_grouped <- df_bc %>% group_by(ZIP) %>% summarise(events = sum(events))
+
+df_bc_grouped <- df_bc_grouped[order(df_bc_grouped$events),] %>% mutate(cum = cumsum(events)/sum(events))
+df_bc_grouped$cum_zips <- seq(0, 27428, 1) / 27428
+df_bc_grouped
+
+ggplot(data=df_bc_grouped, aes(x=cum_zips, y=cum)) +
+    geom_line() +
+    labs(title="Pareto Chart: Percentage of Events by Percentile of Zip Codes, before March 2020",x="Percentile of Zip Codes, by events before March 2020", y = "Percentage of Sales")
+
+# After Covid.
+df_ac_grouped <- df_ac %>% group_by(ZIP) %>% summarise(events = sum(events))
+
+df_ac_grouped <- df_ac_grouped[order(df_ac_grouped$events),] %>% mutate(cum = cumsum(events)/sum(events))
+df_ac_grouped$cum_zips <- seq(0, 27428, 1) / 27428
+df_ac_grouped
+
+ggplot(data=df_ac_grouped, aes(x=cum_zips, y=cum)) +
+    geom_line() +
+    labs(title="Pareto Chart: Percentage of Events by Percentile of Zip Codes, March 2020 onward",x="Percentile of Zip Codes, by events March 2020 onward", y = "Percentage of Sales")
+
+# The top 12.5% of zip codes, which were responsible for ~75% of Evite's events.
+top_twelve_bc <- df_bc_grouped[df_bc_grouped$cum_zips >= 0.875,]
+top_twelve_ac <- df_ac_grouped[df_ac_grouped$cum_zips >= 0.875,]
+
+# 90.5% of zip codes in the top 12.5% remained in the top 12.5% from before to after Covid.
+mean((top_twelve_bc$ZIP %in% top_twelve_ac$ZIP) == TRUE)
+
+# The top 6.25% of zip codes, which were responsible for ~50% of Evite's events.
+top_six_bc <- df_bc_grouped[df_bc_grouped$cum_zips >= 0.9375,]
+top_six_ac <- df_ac_grouped[df_ac_grouped$cum_zips >= 0.9375,]
+
+# 86% of zip codes in the top 6.25% remained in the top 6.25% from before to after Covid.
+mean((top_six_bc$ZIP %in% top_six_ac$ZIP) == TRUE)
