@@ -389,8 +389,10 @@ MAPE(df_bc$events + 1, pm$fitted.values)
 MAPE(df_bc$events + 1, pm$fitted.values %>% sapply(function(x) max(x, 0)))
 
 # Zero-inflated Poisson
-zpm <- zeroinfl(events ~ . - ZIP - June, data = desired_covariates)
+# zpm <- zeroinfl(events ~ . - ZIP - June, data = desired_covariates)
+zpm <- readRDS("zpm.rds")
 summary(zpm)
+# saveRDS(zpm, "zpm.rds")
 
 MAPE(df_bc$events + 1, zpm$fitted.values)
 MAPE(df_bc$events + 1, zpm$fitted.values %>% sapply(function(x) max(x, 0)))
