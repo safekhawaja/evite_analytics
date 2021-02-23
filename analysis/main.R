@@ -1,10 +1,11 @@
 ##################
 ## MKTG 401 data
 
-library(tidyverse)
-library(psych)
-library(dummies)
-library(TSPred)
+library(tidyverse) # The basics
+library(psych) # Factor and cluster analysis
+library(dummies) # Indicator variables
+library(TSPred) # MAPE
+library(pscl) # Zero-inflated Poisson
 
 # TODO: testing and training datasets, re-run regressions on only the zipcodes that tend to make purchases,
 #       run Poisson regression
@@ -23,18 +24,18 @@ df$month <- lubridate::month(df$date)
 df$UnempRate <- as.numeric(df$UnempRate) / 100
 
 # Standardizing numeric fields.  mean zero, variance one.
-# df <- df %>% mutate_at(c('Pop', 'ZipArea', 'Density', 'SexRatio', 'MedianAge',
-#                          'PercPopUnder18', 'PercPopOver65', 'PercWhite', 'PercBlack',
-#                          'PercAsian', 'PercLatino', 'HousingUnits', 'IncomeBucket1',
-#                          'IncomeBucket2', 'IncomeBucket3', 'IncomeBucket4', 'IncomeBucket5',
-#                          'IncomeBucket6', 'IncomeBucket7', 'IncomeBucket8', 'IncomeBucket9',
-#                          'IncomeBucket10',
-#                          'MedianHHIncome', 'MeanHHIncome', 'PercInsured', 'TotalHHs',
-#                          'FamHHs', 'Perc_HHsAbSixtyFive', 'Perc_HHsBelEighteen', 'AvgHHSize',
-#                          'AvgFamSize', 'AvgBirthRate', 'HHwGrandpar', 'HHswComp', 'HHwInt',
-#                          'UnempRate', 'HighschoolRate', 'BachelorsRate',
-#                          'irs_estimated_population_2015'),
-#                        ~(scale(.) %>% as.vector))
+df <- df %>% mutate_at(c('Pop', 'ZipArea', 'Density', 'SexRatio', 'MedianAge',
+                         'PercPopUnder18', 'PercPopOver65', 'PercWhite', 'PercBlack',
+                         'PercAsian', 'PercLatino', 'HousingUnits', 'IncomeBucket1',
+                         'IncomeBucket2', 'IncomeBucket3', 'IncomeBucket4', 'IncomeBucket5',
+                         'IncomeBucket6', 'IncomeBucket7', 'IncomeBucket8', 'IncomeBucket9',
+                         'IncomeBucket10',
+                         'MedianHHIncome', 'MeanHHIncome', 'PercInsured', 'TotalHHs',
+                         'FamHHs', 'Perc_HHsAbSixtyFive', 'Perc_HHsBelEighteen', 'AvgHHSize',
+                         'AvgFamSize', 'AvgBirthRate', 'HHwGrandpar', 'HHswComp', 'HHwInt',
+                         'UnempRate', 'HighschoolRate', 'BachelorsRate',
+                         'irs_estimated_population_2015'),
+                       ~(scale(.) %>% as.vector))
 
 df_bc <- df[df$after_covid == 0,] # Before Covid.
 df_ac <- df[df$after_covid == 1,] # After Covid.
@@ -376,4 +377,20 @@ mean((top_six_bc$ZIP %in% top_six_ac$ZIP) == TRUE)
 # Poisson regression
 ####################################################################
 
+# Poisson regressions are appropriate here because we are dealing
+# with count data with large amounts of zeroes.
+hist(df_bc$events)
 
+# Poisson
+pm <- glm(events ~ . - ZIP, family="poisson", data=desired_covariates)
+summary(pm)
+
+MAPE(df_bc$events + 1, pm$fitted.values)
+MAPE(df_bc$events + 1, pm$fitted.values %>% sapply(function(x) max(x, 0)))
+
+# Zero-inflated Poisson
+zpm <- zeroinfl(events ~ . - ZIP - June, data = desired_covariates)
+summary(zpm)
+
+MAPE(df_bc$events + 1, zpm$fitted.values)
+MAPE(df_bc$events + 1, zpm$fitted.values %>% sapply(function(x) max(x, 0)))
