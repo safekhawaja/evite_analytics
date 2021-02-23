@@ -6,15 +6,16 @@ library(psych)
 library(dummies)
 library(TSPred)
 
+# TODO: testing and training datasets, re-run regressions on only the zipcodes that tend to make purchases,
+#       run Poisson regression
+
 ####################################################################
 # Loading and cleaning data
 ####################################################################
 
-# Original memory limit was 7919
-# I just set it to 56000 by running memory.limit(56000)
-# To restore it to the original, run memory.limit(7919)
-
-combined_df = as_tibble(read.csv("combined_df.csv"))
+combined_df <- read_csv("combined_df.csv")
+stateRegions <- read_csv("stateRegions.csv")
+combined_df <- combined_df %>% left_join(stateRegions, by="state") %>% select(-X_merge)
 
 df <- combined_df # Before and after Covid.
 df$date <- substr(combined_df$date, 1, 7) %>% lubridate::dmy()
@@ -370,3 +371,9 @@ top_six_ac <- df_ac_grouped[df_ac_grouped$cum_zips >= 0.9375,]
 
 # 86% of zip codes in the top 6.25% remained in the top 6.25% from before to after Covid.
 mean((top_six_bc$ZIP %in% top_six_ac$ZIP) == TRUE)
+
+####################################################################
+# Poisson regression
+####################################################################
+
+
