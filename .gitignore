@@ -4,3 +4,12 @@
 .Ruserdata
 analysis/combined_df.csv
 analysis/df_bc_desiredcovariates.csv
+analysis/zpm.rds
+analysis/top20Percent.csv
+analysis/top20Percent_ac.csv
+analysis/top20Percent_bc.csv
+analysis/combined_df_bc.csv
+analysis/combined_df_ac.csv
+analysis/bottom80Percent_bc.csv
+analysis/bottom80Percent_ac.csv
+analysis/bottom80Percent.csv

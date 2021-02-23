@@ -15,8 +15,8 @@ library(pscl) # Zero-inflated Poisson
 ####################################################################
 
 combined_df <- read_csv("combined_df.csv")
-stateRegions <- read_csv("stateRegions.csv")
-combined_df <- combined_df %>% left_join(stateRegions, by="state") %>% select(-X_merge)
+# stateRegions <- read_csv("stateRegions.csv")
+# combined_df <- combined_df %>% left_join(stateRegions, by="state") %>% select(-`_merge`)
 
 df <- combined_df # Before and after Covid.
 df$date <- substr(combined_df$date, 1, 7) %>% lubridate::dmy()
@@ -37,9 +37,6 @@ df <- df %>% mutate_at(c('Pop', 'ZipArea', 'Density', 'SexRatio', 'MedianAge',
                          'irs_estimated_population_2015'),
                        ~(scale(.) %>% as.vector))
 
-df_bc <- df[df$after_covid == 0,] # Before Covid.
-df_ac <- df[df$after_covid == 1,] # After Covid.
-
 ####################################################################
 # Factor analysis
 ####################################################################
@@ -50,26 +47,28 @@ df_ac <- df[df$after_covid == 1,] # After Covid.
 ####################
 # All numeric fields
 
-for_factor_analysis <- df_bc %>%
-  select(c('Pop', 'ZipArea', 'Density', 'SexRatio', 'MedianAge',
-           'PercPopUnder18', 'PercPopOver65', 'PercWhite', 'PercBlack',
-           'PercAsian', 'PercLatino', 'HousingUnits', 'IncomeBucket1',
-           'IncomeBucket2', 'IncomeBucket3', 'IncomeBucket4', 'IncomeBucket5',
-           'IncomeBucket6', 'IncomeBucket7', 'IncomeBucket8', 'IncomeBucket9',
-           'IncomeBucket10',
-           'MedianHHIncome', 'MeanHHIncome', 'PercInsured', 'TotalHHs',
-           'FamHHs', 'Perc_HHsAbSixtyFive', 'Perc_HHsBelEighteen', 'AvgHHSize',
-           'AvgFamSize', 'AvgBirthRate', 'HHwGrandpar', 'HHswComp', 'HHwInt',
-           'UnempRate', 'HighschoolRate', 'BachelorsRate',
-           'irs_estimated_population_2015')) %>%
-  select_if(is.numeric)
+# for_factor_analysis <- df %>%
+#   select(c('Pop', 'ZipArea', 'Density', 'SexRatio', 'MedianAge',
+#            'PercPopUnder18', 'PercPopOver65', 'PercWhite', 'PercBlack',
+#            'PercAsian', 'PercLatino', 'HousingUnits', 'IncomeBucket1',
+#            'IncomeBucket2', 'IncomeBucket3', 'IncomeBucket4', 'IncomeBucket5',
+#            'IncomeBucket6', 'IncomeBucket7', 'IncomeBucket8', 'IncomeBucket9',
+#            'IncomeBucket10',
+#            'MedianHHIncome', 'MeanHHIncome', 'PercInsured', 'TotalHHs',
+#            'FamHHs', 'Perc_HHsAbSixtyFive', 'Perc_HHsBelEighteen', 'AvgHHSize',
+#            'AvgFamSize', 'AvgBirthRate', 'HHwGrandpar', 'HHswComp', 'HHwInt',
+#            'UnempRate', 'HighschoolRate', 'BachelorsRate',
+#            'irs_estimated_population_2015')) %>%
+#   select_if(is.numeric)
 
 # Uncomment if you want to verify that there are nine factors (SS Loadings >= 1)
 # principal(for_factor_analysis, nfactors=38, rotate="none", scores=TRUE, missing=TRUE, impute="median")
 
 # Looks like there are nine factors (SS Loadings >= 1)
 # Adding missing=TRUE to impute missing values.
-pc <- principal(for_factor_analysis, nfactors=9, scores=TRUE, missing=TRUE, impute="median")
+# pc <- principal(for_factor_analysis, nfactors=9, scores=TRUE, missing=TRUE, impute="median")
+# saveRDS(pc, "pca.rds")
+pc <- readRDS("pca.rds")
 pc
 
 # RC3: population (>=0.95: Pop, HousingUnits, TotalHHs, FamHHs, irs_estimated_population_2015)
@@ -85,19 +84,19 @@ pc
 pc_scores <- as_tibble(pc$scores)
 
 # Regression using factor scores.
-lin <- lm(df_bc.events ~ ., data.frame(df_bc$events,
-                                 pc_scores$RC1,
-                                 pc_scores$RC2,
-                                 pc_scores$RC3,
-                                 pc_scores$RC4,
-                                 pc_scores$RC5,
-                                 pc_scores$RC6,
-                                 pc_scores$RC7,
-                                 pc_scores$RC8,
-                                 pc_scores$RC9))
-summary(lin)
+# lin <- lm(df_bc.events ~ ., data.frame(df_bc$events,
+#                                  pc_scores$RC1,
+#                                  pc_scores$RC2,
+#                                  pc_scores$RC3,
+#                                  pc_scores$RC4,
+#                                  pc_scores$RC5,
+#                                  pc_scores$RC6,
+#                                  pc_scores$RC7,
+#                                  pc_scores$RC8,
+#                                  pc_scores$RC9))
+# summary(lin)
 
-df_bc <- bind_cols(df_bc, pc_scores)
+df <- bind_cols(df, pc_scores)
 
 ###############################
 # Income-related numeric fields
@@ -132,20 +131,6 @@ df_bc <- bind_cols(df_bc, pc_scores)
 ####################################################################
 
 # Month indicator variables
-df_bc <- bind_cols(df_bc, as_tibble(dummy(df_bc$month))) %>% rename(January="month)))1",
-                                                                    February="month)))2",
-                                                                    March="month)))3",
-                                                                    April="month)))4",
-                                                                    May="month)))5",
-                                                                    June="month)))6",
-                                                                    July="month)))7",
-                                                                    August="month)))8",
-                                                                    September="month)))9",
-                                                                    October="month)))10",
-                                                                    November="month)))11",
-                                                                    December="month)))12")
-
-# Month indicator variables
 df <- bind_cols(df, as_tibble(dummy(df$month))) %>% rename(January="month)))1",
                                                            February="month)))2",
                                                            March="month)))3",
@@ -159,38 +144,37 @@ df <- bind_cols(df, as_tibble(dummy(df$month))) %>% rename(January="month)))1",
                                                            November="month)))11",
                                                            December="month)))12")
 
-# Regression with month indicator variables.
-lin <- lm(events ~ ., df_bc %>% select(events,
-                                       RC1, RC2, RC3, RC4, RC5, RC6, RC7,
-                                       RC8, RC9,
-                                       January, February, March, April,
-                                       May, June, July, August, September,
-                                       October, November, December)
-          )
-summary(lin)
+# # Regression with month indicator variables.
+# lin <- lm(events ~ ., df_bc %>% select(events,
+#                                        RC1, RC2, RC3, RC4, RC5, RC6, RC7,
+#                                        RC8, RC9,
+#                                        January, February, March, April,
+#                                        May, June, July, August, September,
+#                                        October, November, December)
+#           )
+# summary(lin)
+#
+# MAPE(df_bc$events + 1, lin$fitted.values)
+# MAPE(df_bc$events + 1, lin$fitted.values %>% sapply(function(x) max(x, 0)))
 
-MAPE(df_bc$events + 1, lin$fitted.values)
-MAPE(df_bc$events + 1, lin$fitted.values %>% sapply(function(x) max(x, 0)))
+df_bc <- df[df$after_covid == 0,] # Before Covid.
+df_ac <- df[df$after_covid == 1,] # After Covid.
 
 ####################################################################
 # Dummy variables for location covariates (e.g. states)
 ####################################################################
 
 # Filtering down to only the desired covariates and the index (ZIP)
-desired_covariates <- df_bc %>% select(ZIP, events,
-                                    RC1, RC2, RC3, RC4, RC5, RC6, RC7,
-                                    RC8, RC9,
-                                    January, February, March, April,
-                                    May, June, July, August, September,
-                                    October, November, December)
-
-# write_csv(desired_covariates, "df_bc_desiredcovariates.csv")
+# desired_covariates <- df_bc %>% select(ZIP, events,
+#                                     RC1, RC2, RC3, RC4, RC5, RC6, RC7,
+#                                     RC8, RC9,
+#                                     January, February, March, April,
+#                                     May, June, July, August, September,
+#                                     October, November, December)
 
 # Creating indicator variables for states
 lin <- lm(events ~ ., bind_cols(desired_covariates,
-                                as_tibble(dummy(df_bc$state))
-)
-)
+                                as_tibble(dummy(df_bc$state))))
 summary(lin)
 
 # Adding dummy variables for states increases R^2 (good) but increases MAPE (bad.
@@ -373,6 +357,17 @@ top_six_ac <- df_ac_grouped[df_ac_grouped$cum_zips >= 0.9375,]
 # 86% of zip codes in the top 6.25% remained in the top 6.25% from before to after Covid.
 mean((top_six_bc$ZIP %in% top_six_ac$ZIP) == TRUE)
 
+# top_df <- df[df$ZIP %in% df_bc_grouped[df_bc_grouped$cum >= 0.10,]$ZIP,]
+# bottom_df <- df[!(df$ZIP %in% df_bc_grouped[df_bc_grouped$cum >= 0.10,]$ZIP),]
+
+# The top 21% of zip codes responsible for 90% of Evite's sales.
+# write_csv(top_df, "top20Percent.csv")
+# write_csv(bottom_df, "bottom80Percent.csv")
+# write_csv(top_df[top_df$after_covid == 0,], "top20Percent_bc.csv")
+# write_csv(bottom_df[bottom_df$after_covid == 0,], "bottom80Percent_bc.csv")
+# write_csv(top_df[top_df$after_covid == 1,], "top20Percent_ac.csv")
+# write_csv(bottom_df[bottom_df$after_covid == 1,], "bottom80Percent_ac.csv")
+
 ####################################################################
 # Poisson regression
 ####################################################################
@@ -396,3 +391,22 @@ summary(zpm)
 
 MAPE(df_bc$events + 1, zpm$fitted.values)
 MAPE(df_bc$events + 1, zpm$fitted.values %>% sapply(function(x) max(x, 0)))
+
+####################################################################
+# Drop in events before and after Covid
+####################################################################
+
+events_per_month_bc <- df_bc %>% group_by(ZIP, month) %>% summarise(events = mean(events)) %>% rename(events_bc = events)
+events_per_month_ac <- df_ac %>% group_by(ZIP, month) %>% summarise(events = mean(events)) %>% rename(events_ac = events)
+
+events_per_month_ac <- events_per_month_ac %>% left_join(events_per_month_bc, by=c("ZIP", "month"))
+events_per_month_ac$events_change <- events_per_month_ac$events_ac - events_per_month_ac$events_bc
+events_per_month_ac
+
+df_ac <- left_join(df_ac, events_per_month_ac, by=c("ZIP", "month")) %>% select(-events_ac, -events_bc)
+
+lin <- lm(events_change ~ ., df_ac %>%
+              select(RC1, RC2, RC3, RC4, RC5, RC6, RC7, RC8, RC9,
+                     March, April, May, June, July, August, events_change))
+summary(lin)
+
