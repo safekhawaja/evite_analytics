@@ -12,7 +12,7 @@ from sklearn.metrics import r2_score
 
 # Importing Data
 
-evite = pd.read_csv("/Users/saif/Downloads/data_cleaned_for_class.csv", index_col=0, parse_dates=True)
+evite = pd.read_csv("/Users/saif/Documents/GitHub/mktg401/data/before_covid.csv", index_col=0, parse_dates=True)
 evite["date"] = evite.apply(lambda x: datetime.strptime(x["date"][0:7], "%d%b%y"), axis=1)
 
 # Formatting Data
@@ -32,11 +32,11 @@ r_sq = model.score(cd2d, ce2d)
 
 print('coefficient of determination:', r_sq)
 
-knn = KNeighborsRegressor(n_neighbors=3)
-knn.fit(cd2d, ce2d)
+# knn = KNeighborsRegressor(n_neighbors=3)
+# knn.fit(cd2d, ce2d)
 
-print(knn.predict(cd2d[:3]))
-print(knn.score(cd2d, ce2d))
+# print(knn.predict(cd2d[:3]))
+# print(knn.score(cd2d, ce2d))
 
 '''
 # regression = linear_model.LinearRegression(degree=2) or:

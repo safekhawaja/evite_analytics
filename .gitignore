@@ -13,3 +13,6 @@ analysis/combined_df_ac.csv
 analysis/bottom80Percent_bc.csv
 analysis/bottom80Percent_ac.csv
 analysis/bottom80Percent.csv
+*.csv
+data/before_covid.csv
+data/after_covid.csv
