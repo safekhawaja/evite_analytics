@@ -1,5 +1,10 @@
-from sklearn.model_selection import TimeSeriesSplit
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import TimeSeriesSplit, cross_val_score
 import sklearn.metrics as metrics
+from sklearn.neighbors import KNeighborsRegressor
+from sklearn.neural_network import MLPRegressor
+from sklearn.svm import SVR
 
 '''
 How well does a time series trained on pre-COVID event occurences predict current events?
