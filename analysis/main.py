@@ -7,7 +7,6 @@ from datetime import datetime
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.metrics import r2_score
 from sklearn import svm
-import sorting_functions
 
 # Importing Data
 
