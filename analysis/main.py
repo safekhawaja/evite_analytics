@@ -2,12 +2,10 @@ import numpy as np
 import pandas as pd
 from sklearn.linear_model import LinearRegression
 # from sklearn.preprocessing import PolynomialFeatures
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 from datetime import datetime
 from sklearn.neighbors import KNeighborsRegressor
-
-# https://scikit-learn.org/stable/supervised_learning.html#supervised-learning
-# https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html
+# import statsmodels.api as sm
 from sklearn.metrics import r2_score
 
 # Importing Data
@@ -15,20 +13,38 @@ from sklearn.metrics import r2_score
 evite = pd.read_csv("/Users/saif/Documents/GitHub/mktg401/data/before_covid.csv", index_col=0, parse_dates=True)
 evite["date"] = evite.apply(lambda x: datetime.strptime(x["date"][0:7], "%d%b%y"), axis=1)
 
+evite['index'] = evite.index
+
+# print(evite.date)
+
+'''
+fig = sm.qqplot(evite.events, line='45')
+plt.show()
+
+Any vartiable of data indexed for time does not follow normal distribution but leaving this here to check
+'''
+
+# plt.plot(evite.date, evite.events, color='#444444', linestyle='--', label='')
+
+#plt.scatter(evite.date, evite.events, color='#444444', linestyle='--', label='')
+# plt.show()
+
 # Formatting Data
 
 columns_date = evite["date"].to_numpy()
 columns_events = evite["events"].to_numpy()
+col_ind = evite.index.to_numpy()
 
+idd = col_ind.reshape(-1, 1)
 cd2d = columns_date.reshape(-1, 1)
 ce2d = columns_events.reshape(-1, 1)
 
 # Making Predictions
 
 lin_reg = LinearRegression()
-model = lin_reg.fit(cd2d, ce2d)
+model = lin_reg.fit(idd, ce2d)
 
-r_sq = model.score(cd2d, ce2d)
+r_sq = model.score(idd, ce2d)
 
 print('coefficient of determination:', r_sq)
 
