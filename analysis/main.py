@@ -7,6 +7,7 @@ from datetime import datetime
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.metrics import r2_score
 from sklearn import svm
+import sorting_functions
 
 # Importing Data
 
@@ -14,38 +15,17 @@ evite = pd.read_csv("/Users/saif/Documents/GitHub/mktg401/data/before_covid.csv"
 evite["date"] = evite.apply(lambda x: datetime.strptime(x["date"][0:7], "%d%b%y"), axis=1)
 evite.date = evite.date.apply(pd.to_datetime)
 
+# Formatting Data
+
 evite['day'] = pd.DatetimeIndex(evite['date']).day
 evite['month'] = pd.DatetimeIndex(evite['date']).month
+evite['year'] = pd.DatetimeIndex(evite['date']).year
 
 dateday = list(zip(evite.day.values, evite.month.values))
 dates = np.array(dateday)
 
-
-def first(n):
-    return n[0]
-
-
-def sort(tuples):
-    return sorted(tuples, key=first)
-
-
-sorted_dates = sort(dateday)
-plt.scatter(sorted_dates[0], sorted_dates[1])
+plt.scatter(evite.date, evite.events, color='#444444', linestyle='--', label='')
 plt.show()
-print(sorted_dates)
-
-# print(dateday)
-
-# dateday = [evite.date.day, evite.date.month]
-# evite.date.split()
-# print(dateday)
-
-# plt.plot(evite.date, evite.events, color='#444444', linestyle='--', label='')
-
-# plt.scatter(evite.date, evite.events, color='#444444', linestyle='--', label='')
-# plt.show()
-
-# Formatting Data
 
 # columns_date = evite["date"].to_numpy()
 # columns_events = evite["events"].to_numpy()
@@ -55,7 +35,7 @@ print(sorted_dates)
 # cd2d = columns_date.reshape(-1, 1)
 # ce2d = columns_events.reshape(-1, 1)
 
-# Making Predictions
+# Training Regression Models (linear, k-NN, logistic and polynomial regressors)
 
 # lin_reg = LinearRegression()
 # model = lin_reg.fit(idd, ce2d)
@@ -67,7 +47,7 @@ print(sorted_dates)
 # knn = KNeighborsRegressor(n_neighbors=3)
 # knn.fit(idd, ce2d)
 #
-# # print(knn.predict(cd2d[:3]))
+# print(knn.predict(cd2d[:3]))
 # print(knn.score(cd2d, ce2d))
 
 
