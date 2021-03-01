@@ -1,5 +1,6 @@
 import pandas as pd
 from datetime import datetime
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 pre_evite = pd.read_csv("/Users/saif/Documents/GitHub/mktg401/data/before_covid.csv", index_col=0, parse_dates=True)
@@ -17,9 +18,10 @@ print(pre_evite_f.rm7)
 print(pre_evite_f.rm30)
 print(pre_evite_f.rm365)
 
+mpl.rcParams['agg.path.chunksize'] = 10000
 plt.plot(pre_evite.date, pre_evite_f.rm7, color='#444444', linestyle='-', label='7-Day Moving Average')
-plt.plot(pre_evite.date, pre_evite_f.rm30, color='#444444', linestyle='-', label='30-Day Moving Average')
-plt.plot(pre_evite.date, pre_evite_f.rm365, color='#444444', linestyle='-', label='365-Day Moving Average')
-plt.ylim(0, 2)
+# plt.plot(pre_evite.date, pre_evite_f.rm30, color='#444444', linestyle='-', label='30-Day Moving Average')
+# plt.plot(pre_evite.date, pre_evite_f.rm365, color='#444444', linestyle='-', label='365-Day Moving Average')
+# plt.ylim(0, 2)
 plt.legend()
 plt.show()
