@@ -6,9 +6,7 @@ library(psych) # Factor and cluster analysis
 library(dummies) # Indicator variables
 library(TSPred) # MAPE
 library(pscl) # Zero-inflated Poisson
-library(gganimate)
-library(gifski)
-library(av)
+library(reshape2)
 
 ####################################################################
 # Loading and cleaning data
@@ -175,8 +173,26 @@ pm <- glm(events ~ . - ZIP, family="poisson", data=top_df_bc %>% dplyr::select(
 ))
 summary(pm)
 
-MAPE(top_df_bc$events + 1, pm$fitted.values)
-MAPE(top_df_bc$events + 1, pm$fitted.values %>% sapply(function(x) max(x, 0)))
+MAPE(top_df_bc$events + 1, pm$fitted.values + 1)
+
+df <- data.frame(fitted = pm$fitted.values,
+                 actual = top_df_bc_minus_one$events)
+ggplot(melt(df), aes(value, fill = variable)) + geom_histogram(position = "dodge")
+
+top_df_bc_minus_one <- top_df_bc
+top_df_bc_minus_one$events <- top_df_bc$events - 1
+
+pm <- glm(events ~ . - ZIP, family="poisson", data=top_df_bc_minus_one %>% dplyr::select(
+    ZIP, events, RC1, RC2, RC3, RC4, RC5, RC6, RC7, RC8, RC9,
+    February, March, April, May, June, July, August, September,
+    October, November, December, region
+))
+summary(pm)
+
+MAPE(top_df_bc_minus_one$events + 1, pm$fitted.values + 1)
+
+floor(top_df_bc$events / 50)
+
 
 # NBD
 library(MASS)

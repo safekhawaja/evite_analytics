@@ -257,3 +257,202 @@ p <- ggplot(for_animation) +
 p + transition_time(month) +
     labs(title = "Events Relative to Previous Months, 2020\n
                   Month: {month.name[frame_time]}")
+
+#########
+
+distr_events <- events_per_month_ac %>% group_by(events_change) %>% count()
+data.frame(distr_events)
+
+hist(events_per_month_ac$events_change)
+hist(events_per_month_ac$events_change[events_per_month_ac$events_change > -200])
+hist(events_per_month_ac$events_change[events_per_month_ac$events_change > -50])
+
+# After Covid.
+n <- events_per_month_ac %>% group_by(ZIP) %>% summarise(events_change = sum(events_change))
+n <- n[order(n$events_change, decreasing=TRUE),] %>% mutate(cum = cumsum(events_change)/sum(events_change))
+n$cum_zips <- seq(0, 27428, 1) / 27428
+n
+
+ggplot(data=n, aes(x=cum_zips, y=cum)) +
+    geom_line() +
+    labs(title="Pareto Chart: Percentage Reduction in Events by Zip Code Percentiles, after Covid",x="Zip Code Percentile, by reduction in events relative to prior months", y = "Percentage of Reduction in Events")
+
+# Responsible for 80% of losses.
+top_losers <- n[n$cum_zips >= 0.9375,]
+top_losers$events_change %>% summary()
+
+# Responsible for ~15% of losses.
+medium_losers <- n[n$cum_zips < 0.9375 & n$cum_zips >= 0.75,]
+medium_losers$events_change %>% summary()
+
+# Responsible for ~5% of losses.
+small_losers <- n[n$cum_zips < 0.75,]
+small_losers$events_change %>% summary()
+
+top_losers <- left_join(top_losers, zipcodes %>% dplyr::select(ZIP, Latitude, Longitude), by="ZIP")
+small_losers <- left_join(small_losers, zipcodes %>% dplyr::select(ZIP, Latitude, Longitude), by="ZIP")
+medium_losers <- left_join(medium_losers, zipcodes %>% dplyr::select(ZIP, Latitude, Longitude), by="ZIP")
+
+top_losers$category = "Most Losses"
+medium_losers$category = "Moderate Losses"
+small_losers$category = "Least Losses"
+
+g <- ggplot(data=bind_rows(top_losers, medium_losers, small_losers)) + geom_point(aes(x=Longitude, y=Latitude, colour=category), size=0.5)
+g <- g + theme_bw() + scale_x_continuous(limits = c(-125,-66), breaks = NULL)
+g <- g + scale_y_continuous(limits = c(20,55), breaks = NULL)
+g <- g + labs(x=NULL, y=NULL)
+g + ggtitle("Zips Losing Events during Covid") + scale_color_manual(values = c("Least Losses" = "#D4BDA4", "Moderate Losses" = "#60D192", "Most Losses" = "#960614"))
+
+# Check whether these losers are the same as the high performers.
+
+# 50% of the top 12.5% are top losers; 99% are a top or medium loser
+mean(top_twelve_bc$ZIP %in% top_losers$ZIP)
+
+# 90% of the top 6.25% are top losers
+mean(top_six_bc$ZIP %in% top_losers$ZIP)
+
+top_six_bc[!(top_six_bc$ZIP %in% top_losers$ZIP),]
+
+bind_rows(top_losers, medium_losers, small_losers) %>%
+    left_join(df, by="ZIP") %>%
+    select('ZIP', 'Pop', 'ZipArea', 'Density', 'SexRatio', 'MedianAge',
+           'PercPopUnder18', 'PercPopOver65', 'PercWhite', 'PercBlack',
+           'PercAsian', 'PercLatino', 'HousingUnits', 'IncomeBucket1',
+           'IncomeBucket2', 'IncomeBucket3', 'IncomeBucket4', 'IncomeBucket5',
+           'IncomeBucket6', 'IncomeBucket7', 'IncomeBucket8', 'IncomeBucket9',
+           'IncomeBucket10',
+           'MedianHHIncome', 'MeanHHIncome', 'PercInsured', 'TotalHHs',
+           'FamHHs', 'Perc_HHsAbSixtyFive', 'Perc_HHsBelEighteen', 'AvgHHSize',
+           'AvgFamSize', 'AvgBirthRate', 'HHwGrandpar', 'HHswComp', 'HHwInt',
+           'UnempRate', 'HighschoolRate', 'BachelorsRate',
+           'irs_estimated_population_2015',
+           category, COVID_CASES_RUNNING, COVID_DEATHS_NEW, COVID_CASES_NEW,
+           COVID_DEATHS_RUNNING) %>%
+    group_by(category) %>%
+    summarise(
+        'Mean_Pop' = mean(Pop),
+        'Mean_ZipArea' = mean(ZipArea),
+        'Mean_Density' = mean(Density),
+        'Mean_SexRatio' = mean(SexRatio),
+        'Mean_MedianAge' = mean(MedianAge),
+        'Mean_PercPopUnder18' = mean(PercPopUnder18),
+        'Mean_PercPopOver65' = mean(PercPopOver65),
+        'Mean_PercWhite' = mean(PercWhite),
+        'Mean_PercBlack' = mean(PercBlack),
+        'Mean_PercAsian' = mean(PercAsian),
+        'Mean_PercLatino' = mean(PercLatino),
+        'Mean_HousingUnits' = mean(HousingUnits),
+        'Mean_IncomeBucket1' = mean(IncomeBucket1),
+        'Mean_IncomeBucket2' = mean(IncomeBucket2),
+        'Mean_IncomeBucket3' = mean(IncomeBucket3),
+        'Mean_IncomeBucket4' = mean(IncomeBucket4),
+        'Mean_IncomeBucket5' = mean(IncomeBucket5),
+        'Mean_IncomeBucket6' = mean(IncomeBucket6),
+        'Mean_IncomeBucket7' = mean(IncomeBucket7),
+        'Mean_IncomeBucket8' = mean(IncomeBucket8),
+        'Mean_IncomeBucket9' = mean(IncomeBucket9),
+        'Mean_IncomeBucket10' = mean(IncomeBucket10),
+        'Mean_MedianHHIncome' = mean(MedianHHIncome),
+        'Mean_PercInsured' = mean(PercInsured),
+        'Mean_TotalHHs' = mean(TotalHHs),
+        'Mean_FamHHs' = mean(FamHHs),
+        'Mean_Perc_HHsAbSixtyFive' = mean(Perc_HHsAbSixtyFive),
+        'Mean_Perc_HHsBelEighteen' = mean(Perc_HHsBelEighteen),
+        'Mean_AvgHHSize' = mean(AvgHHSize),
+        'Mean_AvgFamSize' = mean(AvgFamSize),
+        'Mean_AvgBirthRate' = mean(AvgBirthRate),
+        'Mean_HHwGrandpar' = mean(HHwGrandpar),
+        'Mean_HHswComp' = mean(HHswComp),
+        'Mean_HHwInt' = mean(HHwInt),
+        'Mean_UnempRate' = mean(UnempRate),
+        'Mean_HighschoolRate' = mean(HighschoolRate),
+        'Mean_BachelorsRate' = mean(BachelorsRate),
+        'Mean_irs_estimated_population_2015' = mean(irs_estimated_population_2015),
+        'Mean_COVID_CASES_RUNNING' = mean(COVID_CASES_RUNNING),
+        'Mean_COVID_CASES_NEW' = mean(COVID_CASES_NEW),
+        'Mean_COVID_DEATHS_RUNNING' = mean(COVID_DEATHS_RUNNING),
+        'Mean_COVID_DEATHS_NEW' = mean(COVID_DEATHS_NEW)
+    ) %>% write_csv("differences_between_losers.csv")
+
+top_twelve_bc$top_losers <- NA
+
+top_twelve_bc[top_twelve_bc$ZIP %in% top_losers$ZIP,]$top_losers <- "In the top losers"
+top_twelve_bc[!(top_twelve_bc$ZIP %in% top_losers$ZIP),]$top_losers <- "Not in the top losers"
+
+top_twelve_bc %>%
+    left_join(df, by="ZIP") %>%
+    select('ZIP', 'Pop', 'ZipArea', 'Density', 'SexRatio', 'MedianAge',
+           'PercPopUnder18', 'PercPopOver65', 'PercWhite', 'PercBlack',
+           'PercAsian', 'PercLatino', 'HousingUnits', 'IncomeBucket1',
+           'IncomeBucket2', 'IncomeBucket3', 'IncomeBucket4', 'IncomeBucket5',
+           'IncomeBucket6', 'IncomeBucket7', 'IncomeBucket8', 'IncomeBucket9',
+           'IncomeBucket10',
+           'MedianHHIncome', 'MeanHHIncome', 'PercInsured', 'TotalHHs',
+           'FamHHs', 'Perc_HHsAbSixtyFive', 'Perc_HHsBelEighteen', 'AvgHHSize',
+           'AvgFamSize', 'AvgBirthRate', 'HHwGrandpar', 'HHswComp', 'HHwInt',
+           'UnempRate', 'HighschoolRate', 'BachelorsRate',
+           'irs_estimated_population_2015',
+           'top_losers', COVID_CASES_RUNNING, COVID_DEATHS_NEW, COVID_CASES_NEW,
+           COVID_DEATHS_RUNNING) %>%
+    group_by(top_losers) %>%
+    summarise(
+        'Mean_Pop' = mean(Pop),
+        'Mean_ZipArea' = mean(ZipArea),
+        'Mean_Density' = mean(Density),
+        'Mean_SexRatio' = mean(SexRatio),
+        'Mean_MedianAge' = mean(MedianAge),
+        'Mean_PercPopUnder18' = mean(PercPopUnder18),
+        'Mean_PercPopOver65' = mean(PercPopOver65),
+        'Mean_PercWhite' = mean(PercWhite),
+        'Mean_PercBlack' = mean(PercBlack),
+        'Mean_PercAsian' = mean(PercAsian),
+        'Mean_PercLatino' = mean(PercLatino),
+        'Mean_HousingUnits' = mean(HousingUnits),
+        'Mean_IncomeBucket1' = mean(IncomeBucket1),
+        'Mean_IncomeBucket2' = mean(IncomeBucket2),
+        'Mean_IncomeBucket3' = mean(IncomeBucket3),
+        'Mean_IncomeBucket4' = mean(IncomeBucket4),
+        'Mean_IncomeBucket5' = mean(IncomeBucket5),
+        'Mean_IncomeBucket6' = mean(IncomeBucket6),
+        'Mean_IncomeBucket7' = mean(IncomeBucket7),
+        'Mean_IncomeBucket8' = mean(IncomeBucket8),
+        'Mean_IncomeBucket9' = mean(IncomeBucket9),
+        'Mean_IncomeBucket10' = mean(IncomeBucket10),
+        'Mean_MedianHHIncome' = mean(MedianHHIncome),
+        'Mean_PercInsured' = mean(PercInsured),
+        'Mean_TotalHHs' = mean(TotalHHs),
+        'Mean_FamHHs' = mean(FamHHs),
+        'Mean_Perc_HHsAbSixtyFive' = mean(Perc_HHsAbSixtyFive),
+        'Mean_Perc_HHsBelEighteen' = mean(Perc_HHsBelEighteen),
+        'Mean_AvgHHSize' = mean(AvgHHSize),
+        'Mean_AvgFamSize' = mean(AvgFamSize),
+        'Mean_AvgBirthRate' = mean(AvgBirthRate),
+        'Mean_HHwGrandpar' = mean(HHwGrandpar),
+        'Mean_HHswComp' = mean(HHswComp),
+        'Mean_HHwInt' = mean(HHwInt),
+        'Mean_UnempRate' = mean(UnempRate),
+        'Mean_HighschoolRate' = mean(HighschoolRate),
+        'Mean_BachelorsRate' = mean(BachelorsRate),
+        'Mean_irs_estimated_population_2015' = mean(irs_estimated_population_2015),
+        'Mean_COVID_CASES_RUNNING' = mean(COVID_CASES_RUNNING),
+        'Mean_COVID_CASES_NEW' = mean(COVID_CASES_NEW),
+        'Mean_COVID_DEATHS_RUNNING' = mean(COVID_DEATHS_RUNNING),
+        'Mean_COVID_DEATHS_NEW' = mean(COVID_DEATHS_NEW)
+    ) %>% write_csv("differences_between_top_twelve.csv")
+
+top_losers$events_change_for_regr <- top_losers$events_change * -1 - min(top_losers$events_change * -1)
+hist(top_losers$events_change_for_regr)
+
+pm <- glm(events_change_for_regr ~ . - ZIP, family="poisson", data=top_losers %>%
+              left_join(df, by="ZIP") %>%
+              select(
+                  ZIP, events_change_for_regr, RC1, RC2, RC3, RC4, RC5, RC6, RC7, RC8, RC9,
+                  February, March, April, May, June, July, August, September,
+                  October, November, December, region
+              ))
+summary(pm)
+
+library(reshape2)
+df <- data.frame(fitted = pm$fitted.values,
+                 actual = top_losers$events_change_for_regr)
+ggplot(melt(df), aes(value, fill = variable)) + geom_histogram(position = "dodge")
