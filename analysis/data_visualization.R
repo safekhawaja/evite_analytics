@@ -64,7 +64,7 @@ df_bc_grouped
 
 ggplot(data=df_bc_grouped, aes(x=cum_zips, y=cum)) +
     geom_line() +
-    labs(title="Pareto Chart: Percentage of Events by Percentile of Zip Codes, before March 2020",x="Percentile of Zip Codes, by events before March 2020", y = "Percentage of Sales")
+    labs(title="Pareto Chart: 12.5% of zips contribute 75% of events, pre-Covid",x="Percentile of Zip Codes", y = "Percentage of Total Events")
 
 # After Covid.
 df_ac_grouped <- df_ac %>% group_by(ZIP) %>% summarise(events = sum(events))
@@ -258,7 +258,9 @@ p + transition_time(month) +
     labs(title = "Events Relative to Previous Months, 2020\n
                   Month: {month.name[frame_time]}")
 
-#########
+####################################################################
+# Visualizing decrease in events
+####################################################################
 
 distr_events <- events_per_month_ac %>% group_by(events_change) %>% count()
 data.frame(distr_events)
@@ -275,7 +277,7 @@ n
 
 ggplot(data=n, aes(x=cum_zips, y=cum)) +
     geom_line() +
-    labs(title="Pareto Chart: Percentage Reduction in Events by Zip Code Percentiles, after Covid",x="Zip Code Percentile, by reduction in events relative to prior months", y = "Percentage of Reduction in Events")
+    labs(title="Pareto Chart: 12.5% of zips contribute 82% of the decrease in events",x="Percentile of Zip Codes", y = "Percentage of Decrease in Events")
 
 # Responsible for 80% of losses.
 top_losers <- n[n$cum_zips >= 0.9375,]
@@ -293,17 +295,19 @@ top_losers <- left_join(top_losers, zipcodes %>% dplyr::select(ZIP, Latitude, Lo
 small_losers <- left_join(small_losers, zipcodes %>% dplyr::select(ZIP, Latitude, Longitude), by="ZIP")
 medium_losers <- left_join(medium_losers, zipcodes %>% dplyr::select(ZIP, Latitude, Longitude), by="ZIP")
 
-top_losers$category = "Most Losses"
-medium_losers$category = "Moderate Losses"
-small_losers$category = "Least Losses"
+top_losers$category = "80% of decrease"
+medium_losers$category = "15% of decrease"
+small_losers$category = "5% of decrease"
 
 g <- ggplot(data=bind_rows(top_losers, medium_losers, small_losers)) + geom_point(aes(x=Longitude, y=Latitude, colour=category), size=0.5)
 g <- g + theme_bw() + scale_x_continuous(limits = c(-125,-66), breaks = NULL)
 g <- g + scale_y_continuous(limits = c(20,55), breaks = NULL)
 g <- g + labs(x=NULL, y=NULL)
-g + ggtitle("Zips Losing Events during Covid") + scale_color_manual(values = c("Least Losses" = "#D4BDA4", "Moderate Losses" = "#60D192", "Most Losses" = "#960614"))
+g + ggtitle("Geographic distribution of decrease in events after Covid") + scale_color_manual(values = c("5% of decrease" = "#127c0e", "15% of decrease" = "#0e2df4", "80% of decrease" = "#ef2715"))
 
-# Check whether these losers are the same as the high performers.
+####################################################################
+# Comparing tranches of zip codes
+####################################################################
 
 # 50% of the top 12.5% are top losers; 99% are a top or medium loser
 mean(top_twelve_bc$ZIP %in% top_losers$ZIP)
@@ -372,7 +376,7 @@ bind_rows(top_losers, medium_losers, small_losers) %>%
         'Mean_COVID_CASES_NEW' = mean(COVID_CASES_NEW),
         'Mean_COVID_DEATHS_RUNNING' = mean(COVID_DEATHS_RUNNING),
         'Mean_COVID_DEATHS_NEW' = mean(COVID_DEATHS_NEW)
-    ) %>% write_csv("differences_between_losers.csv")
+    ) %>% write_csv("differences_between_losers_original.csv")
 
 top_twelve_bc$top_losers <- NA
 
@@ -438,7 +442,7 @@ top_twelve_bc %>%
         'Mean_COVID_CASES_NEW' = mean(COVID_CASES_NEW),
         'Mean_COVID_DEATHS_RUNNING' = mean(COVID_DEATHS_RUNNING),
         'Mean_COVID_DEATHS_NEW' = mean(COVID_DEATHS_NEW)
-    ) %>% write_csv("differences_between_top_twelve.csv")
+    ) %>% write_csv("differences_between_top_twelve_original.csv")
 
 top_losers$events_change_for_regr <- top_losers$events_change * -1 - min(top_losers$events_change * -1)
 hist(top_losers$events_change_for_regr)
@@ -456,3 +460,81 @@ library(reshape2)
 df <- data.frame(fitted = pm$fitted.values,
                  actual = top_losers$events_change_for_regr)
 ggplot(melt(df), aes(value, fill = variable)) + geom_histogram(position = "dodge")
+
+####################################################################
+# Visualizing events by region
+####################################################################
+
+ggplot(data=df_bc %>%
+           group_by(region) %>%
+           summarise(events = sum(events)),
+       aes(x=region, y=events)) +
+    scale_y_continuous(limits = c(0,3000000)) +
+    geom_bar(stat="identity") + ggtitle("Events by region, before Covid")
+
+ggplot(data=df_ac %>%
+           group_by(region) %>%
+           summarise(events = sum(events)),
+       aes(x=region, y=events)) +
+    scale_y_continuous(limits = c(0,3000000)) +
+    geom_bar(stat="identity") + ggtitle("Events by region, after Covid")
+
+df_bc %>% group_by(region) %>% summarise(events = sum(events))
+df_ac %>% group_by(region) %>% summarise(events = sum(events))
+
+####################################################################
+# Visualizing virtual and physical events over time
+####################################################################
+
+ggplot(data=df %>%
+           dplyr::group_by(date) %>%
+           dplyr::summarise(virtual = sum(virtual),
+                            physical = sum(physical)
+           ), aes(x=date)) +
+    geom_line(aes(y = virtual, colour = "red")) +
+    geom_line(aes(y = physical, colour = "blue")) +
+    geom_vline(xintercept=as.Date("2020-03-01")) +
+    scale_color_manual(labels = c("Physical", "Virtual"),
+                       values = c("red", "blue")) +
+    labs(y = "Events", x = "Date") +
+    ggtitle("Physical and Virtual Events over Time")
+
+####################################################################
+# Visualizing types of events over time
+####################################################################
+
+ggplot(data=df %>%
+           dplyr::group_by(date) %>%
+           dplyr::summarise(Birthday_for_Kids = sum(Birthday_for_Kids),
+                            Graduation = sum(Graduation),
+                            Religious = sum(Religious),
+                            Birthday_for_Him = sum(Birthday_for_Him),
+                            Birthday_for_Her = sum(Birthday_for_Her),
+                            Pool_Party = sum(Pool_Party),
+                            Birthday_for_Teens = sum(Birthday_for_Teens),
+                            Dinner_Party = sum(Dinner_Party),
+                            Birthday_Milestones = sum(Birthday_Milestones)
+           ), aes(x=date)) +
+    geom_line(aes(y = Birthday_for_Kids)) +
+    geom_line(aes(y = Graduation)) +
+    geom_line(aes(y = Religious)) +
+    geom_line(aes(y = Birthday_for_Him)) +
+    geom_line(aes(y = Birthday_for_Her)) +
+    geom_line(aes(y = Pool_Party)) +
+    geom_line(aes(y = Birthday_for_Teens)) +
+    geom_line(aes(y = Dinner_Party)) +
+    geom_line(aes(y = Birthday_Milestones)) +
+    geom_vline(xintercept=as.Date("2020-03-01")) +
+    scale_fill_manual() +
+    # scale_color_manual(labels = c("Birthday_for_Kids", "Graduation",
+    #                               "Religious", "Birthday_for_Him",
+    #                               "Birthday_for_Her", "Pool_Party",
+    #                               "Birthday_for_Teens", "Dinner_Party",
+    #                               "Birthday_Milestones"),
+    #                    values = c("red", "dark blue",
+    #                               "yellow", "dark green",
+    #                               "orange", "pink",
+    #                               "light blue", "purple",
+    #                               "light green")) +
+    labs(y = "Events", x = "Date") +
+    ggtitle("Physical and Virtual Events over Time")
