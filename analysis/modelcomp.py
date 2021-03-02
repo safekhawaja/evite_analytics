@@ -28,13 +28,7 @@ def regression_results(y_true, y_pred):
     print('RMSE: ', round(np.sqrt(mse), 4))
 
 
-evite = pd.read_csv("/Users/saif/Documents/GitHub/mktg401/data/before_covid.csv", index_col=0, parse_dates=True)
-evite["date"] = evite.apply(lambda x: datetime.strptime(x["date"][0:7], "%d%b%y"), axis=1)
-evite.date = evite.date.apply(pd.to_datetime)
-
-evitepost = pd.read_csv("/Users/saif/Documents/GitHub/mktg401/data/after_covid.csv", index_col=0, parse_dates=True)
-evitepost["date"] = evitepost.apply(lambda x: datetime.strptime(x["date"][0:7], "%d%b%y"), axis=1)
-evitepost.date = evitepost.date.apply(pd.to_datetime)
+evite = pd.read_csv("/Users/saif/Documents/GitHub/mktg401/analysis/rollingmeans.csv", index_col=0, parse_dates=True)
 
 # Formatting Data
 
