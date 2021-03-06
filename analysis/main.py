@@ -28,28 +28,49 @@ r_sq = model.score(idd, ce2d)
 
 print('linear coefficient of determination:', r_sq)
 
-counter = 1
+count = 1
+knn_scores = []
 
-while counter < 33:
-    knn = KNeighborsRegressor(n_neighbors=counter)
+while count < 33:
+    knn = KNeighborsRegressor(n_neighbors=count)
     knn.fit(idd, ce2d)
-    print('k = ', counter, ' k-NN score:', knn.score(idd, ce2d))
-    counter = counter + 1
+    print('k = ', count, ' k-NN score:', knn.score(idd, ce2d))
+    knn_scores.append([count, knn.score(idd, ce2d)])
+    count = count + 1
+
+knns = pd.DataFrame(knn_scores)
+knns.to_csv('knns.csv')
 
 poly_reg = PolynomialFeatures(degree=4)
-X_poly = poly_reg.fit_transform(X)
-poly_reg.fit(X_poly,y)
+X_poly = poly_reg.fit_transform(ce2d)
+poly_reg.fit(idd, ce2d)
 lin_reg2 = LinearRegression()
-lin_reg2.fit(X_poly,y)
+lin_reg2.fit(idd, ce2d)
 
-X_grid = np.arange(min(X),max(X),0.1)
-X_grid = X_grid.reshape((len(X_grid),1))
-plt.scatter(X,y,color='red')
-plt.plot(X,lin_reg2.predict(poly_reg.fit_transform(X)),color='blue')
-plt.title('Truth or bluff(Polynomial Regression)')
-plt.xlabel('Position Level')
-plt.ylabel('Salary')
-plt.show()
+r_sq = lin_reg2.score(idd, ce2d)
+print('polynomial coefficient of determination:', r_sq)
+
+# count = 1
+# poly_scores = []
+#
+# while count < 8:
+#     poly_reg = PolynomialFeatures(degree=count)
+#     poly_reg.fit(idd, ce2d)
+#     print('degree = ', count, ' polynomial coefficient of determination:', lin_reg2.score(idd, ce2d))
+#     poly_scores.append([count, lin_reg2.score(idd, ce2d)])
+#     count = count + 1
+#
+# print(poly_scores)
+
+# X_grid = np.arange(min(ce2d),max(ce2d),0.1)
+# X_grid = X_grid.reshape((len(X_grid), 1))
+#
+# plt.scatter(idd, ce2d, color='red')
+# plt.plot(idd, lin_reg2.predict(poly_reg.fit_transform(ce2d)), color='blue')
+# plt.title('Events on Date (Polynomial Regression)')
+# plt.xlabel('Date')
+# plt.ylabel('Events')
+# plt.show()
 
 '''
 Pandas commands:
