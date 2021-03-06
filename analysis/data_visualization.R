@@ -199,49 +199,57 @@ g <- ggplot(data=events_january_bc) + geom_point(aes(x=Longitude, y=Latitude, co
 g <- g + theme_bw() + scale_x_continuous(limits = c(-125,-66), breaks = NULL)
 g <- g + scale_y_continuous(limits = c(20,55), breaks = NULL)
 g <- g + labs(x=NULL, y=NULL)
-g + ggtitle("Events Relative to Previous Januarys, January 2020") + scale_color_gradient2(low = 'red', mid = 'white', high = 'blue')
+g1 <- g + ggtitle("Events Relative to Previous Januarys, January 2020") + scale_color_gradient2(low = 'red', mid = 'white', high = 'blue')
 
 g <- ggplot(data=events_february_bc) + geom_point(aes(x=Longitude, y=Latitude, colour=decile), size=0.5)
 g <- g + theme_bw() + scale_x_continuous(limits = c(-125,-66), breaks = NULL)
 g <- g + scale_y_continuous(limits = c(20,55), breaks = NULL)
 g <- g + labs(x=NULL, y=NULL)
-g + ggtitle("Events Relative to Previous Februarys, February 2020") + scale_color_gradient2(low = 'red', mid = 'white', high = 'blue')
+g2 <- g + ggtitle("Events Relative to Previous Februarys, February 2020") + scale_color_gradient2(low = 'red', mid = 'white', high = 'blue')
 
 g <- ggplot(data=events_march_ac) + geom_point(aes(x=Longitude, y=Latitude, colour=decile), size=0.5)
 g <- g + theme_bw() + scale_x_continuous(limits = c(-125,-66), breaks = NULL)
 g <- g + scale_y_continuous(limits = c(20,55), breaks = NULL)
 g <- g + labs(x=NULL, y=NULL)
-g + ggtitle("Events Relative to Previous Marchs, March 2020") + scale_color_gradient2(low = 'red', mid = 'white', high = 'blue')
+g3 <- g + ggtitle("Events Relative to Previous Marchs, March 2020") + scale_color_gradient2(low = 'red', mid = 'white', high = 'blue')
 
 g <- ggplot(data=events_april_ac) + geom_point(aes(x=Longitude, y=Latitude, colour=decile), size=0.5)
 g <- g + theme_bw() + scale_x_continuous(limits = c(-125,-66), breaks = NULL)
 g <- g + scale_y_continuous(limits = c(20,55), breaks = NULL)
 g <- g + labs(x=NULL, y=NULL)
-g + ggtitle("Events Relative to Previous Aprils, April 2020") + scale_color_gradient2(low = 'red', mid = 'white', high = 'blue')
+g4 <- g + ggtitle("Events Relative to Previous Aprils, April 2020") + scale_color_gradient2(low = 'red', mid = 'white', high = 'blue')
 
 g <- ggplot(data=events_may_ac) + geom_point(aes(x=Longitude, y=Latitude, colour=decile), size=0.5)
 g <- g + theme_bw() + scale_x_continuous(limits = c(-125,-66), breaks = NULL)
 g <- g + scale_y_continuous(limits = c(20,55), breaks = NULL)
 g <- g + labs(x=NULL, y=NULL)
-g + ggtitle("Events Relative to Previous Mays, May 2020") + scale_color_gradient2(low = 'red', mid = 'white', high = 'blue')
+g5 <- g + ggtitle("Events Relative to Previous Mays, May 2020") + scale_color_gradient2(low = 'red', mid = 'white', high = 'blue')
 
 g <- ggplot(data=events_june_ac) + geom_point(aes(x=Longitude, y=Latitude, colour=decile), size=0.5)
 g <- g + theme_bw() + scale_x_continuous(limits = c(-125,-66), breaks = NULL)
 g <- g + scale_y_continuous(limits = c(20,55), breaks = NULL)
 g <- g + labs(x=NULL, y=NULL)
-g + ggtitle("Events Relative to Previous Junes, June 2020") + scale_color_gradient2(low = 'red', mid = 'white', high = 'blue')
+g6 <- g + ggtitle("Events Relative to Previous Junes, June 2020") + scale_color_gradient2(low = 'red', mid = 'white', high = 'blue')
 
 g <- ggplot(data=events_july_ac) + geom_point(aes(x=Longitude, y=Latitude, colour=decile), size=0.5)
 g <- g + theme_bw() + scale_x_continuous(limits = c(-125,-66), breaks = NULL)
 g <- g + scale_y_continuous(limits = c(20,55), breaks = NULL)
 g <- g + labs(x=NULL, y=NULL)
-g + ggtitle("Events Relative to Previous Julys, July 2020") + scale_color_gradient2(low = 'red', mid = 'white', high = 'blue')
+g7 <- g + ggtitle("Events Relative to Previous Julys, July 2020") + scale_color_gradient2(low = 'red', mid = 'white', high = 'blue')
 
 g <- ggplot(data=events_august_ac) + geom_point(aes(x=Longitude, y=Latitude, colour=decile), size=0.5)
 g <- g + theme_bw() + scale_x_continuous(limits = c(-125,-66), breaks = NULL)
 g <- g + scale_y_continuous(limits = c(20,55), breaks = NULL)
 g <- g + labs(x=NULL, y=NULL)
-g + ggtitle("Events Relative to Previous Augusts, August 2020") + scale_color_gradient2(low = 'red', mid = 'white', high = 'blue')
+g8 <- g + ggtitle("Events Relative to Previous Augusts, August 2020") + scale_color_gradient2(low = 'red', mid = 'white', high = 'blue')
+
+library(gridExtra)
+grid.arrange(g1, g2,
+             g3, g4,
+             g5, g6,
+             g7, g8,
+             nrow = 3)
+
 
 events_ac <- events_per_month_ac %>% group_by(ZIP) %>% summarize(events_change=sum(events_change))
 events_ac <- left_join(events_ac, zipcodes %>% dplyr::select(ZIP, Latitude, Longitude), by="ZIP")

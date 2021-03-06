@@ -98,62 +98,6 @@ top_df_bc <- top_df[top_df$after_covid == 0,] # Before Covid.
 top_df_ac <- top_df[top_df$after_covid == 1,] # After Covid.
 
 ####################################################################
-# Cluster analysis
-####################################################################
-
-# Please note that the cluster analyis will create the same clusters
-# each time if run on the same dataset, but it may create them in
-# different orders.
-
-# Before Covid.
-ctr <- kmeans(df_bc %>% group_by(ZIP) %>%
-           summarise(IncomeBucket1 = mean(IncomeBucket1),
-                     IncomeBucket2 = mean(IncomeBucket2),
-                     IncomeBucket3 = mean(IncomeBucket3),
-                     IncomeBucket4 = mean(IncomeBucket4),
-                     IncomeBucket5 = mean(IncomeBucket5),
-                     IncomeBucket6 = mean(IncomeBucket6),
-                     IncomeBucket7 = mean(IncomeBucket7),
-                     IncomeBucket8 = mean(IncomeBucket8),
-                     IncomeBucket9 = mean(IncomeBucket9),
-                     IncomeBucket10 = mean(IncomeBucket10)
-           ), centers = 3)
-ctr
-
-df_bc$cluster <- ctr$cluster
-
-# Low-income, middle-income, and high-income clusters.
-
-by_cluster <- df_bc %>% group_by(date, cluster) %>% summarise(total_events = sum(events))
-# by_cluster$cluster <- sapply(by_cluster$cluster, function(x) ifelse(x==1, "High-income", ifelse(x==2, "Low-income", "Middle-income")))
-
-ggplot(data = by_cluster, aes(x=date, y=total_events)) + geom_line(aes(colour=cluster))
-
-# Before and after Covid.
-ctr <- kmeans(df %>% group_by(ZIP) %>%
-                  summarise(IncomeBucket1 = mean(IncomeBucket1),
-                            IncomeBucket2 = mean(IncomeBucket2),
-                            IncomeBucket3 = mean(IncomeBucket3),
-                            IncomeBucket4 = mean(IncomeBucket4),
-                            IncomeBucket5 = mean(IncomeBucket5),
-                            IncomeBucket6 = mean(IncomeBucket6),
-                            IncomeBucket7 = mean(IncomeBucket7),
-                            IncomeBucket8 = mean(IncomeBucket8),
-                            IncomeBucket9 = mean(IncomeBucket9),
-                            IncomeBucket10 = mean(IncomeBucket10)
-                  ), centers = 3)
-ctr
-
-df$cluster <- ctr$cluster
-
-# Low-income, middle-income, and high-income clusters.
-
-by_cluster <- df %>% group_by(date, cluster) %>% summarise(total_events = sum(events))
-# by_cluster$cluster <- sapply(by_cluster$cluster, function(x) ifelse(x==1, "High-income", ifelse(x==3, "Middle-income", "Low-income")))
-
-ggplot(data = by_cluster, aes(x=date, y=total_events)) + geom_line(aes(colour=cluster))
-
-####################################################################
 # Poisson regression
 ####################################################################
 

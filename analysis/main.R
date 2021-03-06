@@ -47,26 +47,26 @@ df <- df %>% mutate_at(c('Pop', 'ZipArea', 'Density', 'SexRatio', 'MedianAge',
 ####################
 # All numeric fields
 
-# for_factor_analysis <- df %>%
-#   select(c('Pop', 'ZipArea', 'Density', 'SexRatio', 'MedianAge',
-#            'PercPopUnder18', 'PercPopOver65', 'PercWhite', 'PercBlack',
-#            'PercAsian', 'PercLatino', 'HousingUnits', 'IncomeBucket1',
-#            'IncomeBucket2', 'IncomeBucket3', 'IncomeBucket4', 'IncomeBucket5',
-#            'IncomeBucket6', 'IncomeBucket7', 'IncomeBucket8', 'IncomeBucket9',
-#            'IncomeBucket10',
-#            'MedianHHIncome', 'MeanHHIncome', 'PercInsured', 'TotalHHs',
-#            'FamHHs', 'Perc_HHsAbSixtyFive', 'Perc_HHsBelEighteen', 'AvgHHSize',
-#            'AvgFamSize', 'AvgBirthRate', 'HHwGrandpar', 'HHswComp', 'HHwInt',
-#            'UnempRate', 'HighschoolRate', 'BachelorsRate',
-#            'irs_estimated_population_2015')) %>%
-#   select_if(is.numeric)
+for_factor_analysis <- df %>%
+  select(c('Pop', 'ZipArea', 'Density', 'SexRatio', 'MedianAge',
+           'PercPopUnder18', 'PercPopOver65', 'PercWhite', 'PercBlack',
+           'PercAsian', 'PercLatino', 'HousingUnits', 'IncomeBucket1',
+           'IncomeBucket2', 'IncomeBucket3', 'IncomeBucket4', 'IncomeBucket5',
+           'IncomeBucket6', 'IncomeBucket7', 'IncomeBucket8', 'IncomeBucket9',
+           'IncomeBucket10',
+           'MedianHHIncome', 'MeanHHIncome', 'PercInsured', 'TotalHHs',
+           'FamHHs', 'Perc_HHsAbSixtyFive', 'Perc_HHsBelEighteen', 'AvgHHSize',
+           'AvgFamSize', 'AvgBirthRate', 'HHwGrandpar', 'HHswComp', 'HHwInt',
+           'UnempRate', 'HighschoolRate', 'BachelorsRate',
+           'irs_estimated_population_2015')) %>%
+  select_if(is.numeric)
 
 # Uncomment if you want to verify that there are nine factors (SS Loadings >= 1)
-# principal(for_factor_analysis, nfactors=38, rotate="none", scores=TRUE, missing=TRUE, impute="median")
+principal(for_factor_analysis, nfactors=38, rotate="none", scores=TRUE, missing=TRUE, impute="median")
 
 # Looks like there are nine factors (SS Loadings >= 1)
 # Adding missing=TRUE to impute missing values.
-# pc <- principal(for_factor_analysis, nfactors=9, scores=TRUE, missing=TRUE, impute="median")
+pc <- principal(for_factor_analysis, nfactors=9, scores=TRUE, missing=TRUE, impute="median")
 # saveRDS(pc, "pca.rds")
 pc <- readRDS("pca.rds")
 pc
@@ -206,45 +206,58 @@ MAPE(df_bc$events + 1, lin$fitted.values %>% sapply(function(x) max(x, 0)))
 # Forward step-wise regression
 
 intercept_only <- lm(events ~ 1, data=desired_covariates)
-all <- lm(events ~ . - ZIP, data=desired_covariates)
+all <- lm(events ~ . - ZIP - December, data=desired_covariates)
 
 forward <- step(intercept_only, direction='forward', scope=formula(all), trace=1)
 
 #view results of forward stepwise regression
 forward$anova
 
+# Ecludes RC9, March, July
+# Adjusted R-squared:  0.486
+# MAPE: 561%
+
 # Performance is not much better than using all the covariates in desired_covariates
-MAPE(df_bc$events + 1, forward$fitted.values)
+MAPE(df_bc$events + 1, forward$fitted.values + 1)
 MAPE(df_bc$events + 1, forward$fitted.values %>% sapply(function(x) max(x, 0)))
 
 ###############################
 # Backward step-wise regression
 
 intercept_only <- lm(events ~ 1, data=desired_covariates)
-all <- lm(events ~ . - ZIP, data=desired_covariates)
+all <- lm(events ~ . - ZIP - December, data=desired_covariates)
 
 backward <- step(all, direction='backward', scope=formula(all), trace=1)
 
 #view results of backward stepwise regression - in this case, the same as forward step-wise
 backward$anova
+summary(backward)
+
+# MAPE: 561%
+# Ecludes RC9, December
+# Adjusted R-squared:  0.486
 
 # These match the forward step-wise because the backward step-wise produces the same model
-MAPE(df_bc$events + 1, backward$fitted.values)
-MAPE(df_bc$events + 1, backward$fitted.values %>% sapply(function(x) max(x, 0)))
+MAPE(df_bc$events + 1, backward$fitted.values + 1)
+MAPE(df_bc$events + 1, (backward$fitted.values+1) %>% sapply(function(x) max(x, 0)))
 
 #######################################
 # Forward-Backward step-wise regression
 
 intercept_only <- lm(events ~ 1, data=desired_covariates)
-all <- lm(events ~ . - ZIP, data=desired_covariates)
+all <- lm(events ~ . - ZIP - December, data=desired_covariates)
 
 both <- step(intercept_only, direction='both', scope=formula(all), trace=1)
 
 #view final model - in this case, the same as forward step-wise
 both$coefficients
+summary(both)
+
+# Fix what I wrote because it was the backward regression, bot the forward-backward, which excludes one more month (July or March)/
+# then run poisson, show historgam and results
 
 # These match the previous step-wises because they all produce the same model
-MAPE(df_bc$events + 1, both$fitted.values)
+MAPE(df_bc$events + 1, both$fitted.values + 1)
 MAPE(df_bc$events + 1, both$fitted.values %>% sapply(function(x) max(x, 0)))
 
 #######################################
@@ -374,22 +387,22 @@ mean((top_six_bc$ZIP %in% top_six_ac$ZIP) == TRUE)
 
 # Poisson regressions are appropriate here because we are dealing
 # with count data with large amounts of zeroes.
-hist(df_bc$events)
+hist(df_bc$events, main="Histogram of Event Counts before Covid", xlab="Events Counts before Covid")
 
 # Poisson
-pm <- glm(events ~ . - ZIP, family="poisson", data=desired_covariates)
+pm <- glm(events ~ . - ZIP - RC9, family="poisson", data=desired_covariates)
 summary(pm)
 
-MAPE(df_bc$events + 1, pm$fitted.values)
+MAPE(df_bc$events + 1, pm$fitted.values + 1)
 MAPE(df_bc$events + 1, pm$fitted.values %>% sapply(function(x) max(x, 0)))
 
 # Zero-inflated Poisson
-# zpm <- zeroinfl(events ~ . - ZIP - June, data = desired_covariates)
+# zpm <- zeroinfl(events ~ . - ZIP | 1, data=desired_covariates, dist="poisson")
 zpm <- readRDS("zpm.rds")
 summary(zpm)
 # saveRDS(zpm, "zpm.rds")
 
-MAPE(df_bc$events + 1, zpm$fitted.values)
+MAPE(df_bc$events + 1, zpm$fitted.values + 1)
 MAPE(df_bc$events + 1, zpm$fitted.values %>% sapply(function(x) max(x, 0)))
 
 ####################################################################
@@ -402,6 +415,8 @@ events_per_month_ac <- df_ac %>% group_by(ZIP, month) %>% summarise(events = mea
 events_per_month_ac <- events_per_month_ac %>% left_join(events_per_month_bc, by=c("ZIP", "month"))
 events_per_month_ac$events_change <- events_per_month_ac$events_ac - events_per_month_ac$events_bc
 events_per_month_ac
+
+hist(events_per_month_ac$events_change)
 
 df_ac <- left_join(df_ac, events_per_month_ac, by=c("ZIP", "month")) %>% select(-events_ac, -events_bc)
 
