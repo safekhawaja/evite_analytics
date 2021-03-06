@@ -73,7 +73,9 @@ df_ac_grouped
 
 ggplot(data=df_ac_grouped, aes(x=cum_zips, y=cum)) +
     geom_line() +
-    labs(title="Pareto Chart: Percentage of Events by Percentile of Zip Codes, March 2020 onward",x="Percentile of Zip Codes, by events March 2020 onward", y = "Percentage of Sales")
+    labs(title="Pareto Chart: March 2020 and onward",x="Percentile of Zip Codes", y = "Percentage of Total Events")
+
+df_bc_grouped[df_bc_grouped$cum_zips >= 0.75,]
 
 # The top 12.5% of zip codes, which were responsible for ~75% of Evite's events.
 top_twelve_bc <- df_bc_grouped[df_bc_grouped$cum_zips >= 0.875,]
