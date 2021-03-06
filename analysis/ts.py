@@ -18,8 +18,8 @@ df_evite_f.to_csv('rollingmeans.csv', index=True)
 
 mpl.rcParams['agg.path.chunksize'] = 10000
 plt.plot(df_evite.date, df_evite_f.events, color='#000000', linestyle='-', label='Total Events')
-plt.plot(df_evite.date, df_evite_f.rm6, color='#444444', linestyle='-', label='Bi-Monthly Moving Mean')
+plt.plot(df_evite.date, df_evite_f.rm6, color='#444444', linestyle='-', label='Semi-Annual Moving Mean')
 plt.plot(df_evite.date, df_evite_f.rm3, color='#444444', linestyle='--', label='Seasonal Moving Mean')
-plt.plot(df_evite.date, df_evite_f.rm2, color='#444444', linestyle=':', label='Semi-Annual Moving Mean')
+plt.plot(df_evite.date, df_evite_f.rm2, color='#444444', linestyle=':', label='Bimonthly Moving Mean')
 plt.legend()
 plt.show()
