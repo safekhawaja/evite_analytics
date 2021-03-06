@@ -8,7 +8,7 @@ library(TSPred) # MAPE
 library(pscl) # Zero-inflated Poisson
 library(gganimate)
 library(gifski)
-library(av)
+library(scales)
 
 ####################################################################
 # Loading and cleaning data
@@ -19,6 +19,7 @@ combined_df <- read_csv("combined_df.csv")
 df <- combined_df # Before and after Covid.
 df$date <- substr(combined_df$date, 1, 7) %>% lubridate::dmy()
 df$month <- lubridate::month(df$date)
+df$year <- as.character(lubridate::year(df$date))
 df$UnempRate <- as.numeric(df$UnempRate) / 100
 
 # Standardizing numeric fields.  mean zero, variance one.
@@ -96,6 +97,23 @@ bottom_df <- df[!(df$ZIP %in% df_bc_grouped[df_bc_grouped$cum >= 0.10,]$ZIP),]
 
 top_df_bc <- top_df[top_df$after_covid == 0,] # Before Covid.
 top_df_ac <- top_df[top_df$after_covid == 1,] # After Covid.
+
+
+####################################################################
+# Visualizing events over time
+####################################################################
+
+df_bc %>%
+    group_by(month, year) %>%
+    summarise(events = sum(events)) %>%
+    ggplot(aes(x=month, y=events, group=year, color=year)) +
+    geom_line(size=1) +
+    theme_minimal() +
+    scale_x_discrete(name ="Month",
+                     limits=as.character(c(1:12))) +
+    ylab("Events") +
+    ggtitle("Events per Month before Covid") +
+    scale_color_brewer(palette="Paired")
 
 ####################################################################
 # Visualizing events by zip code
@@ -181,49 +199,57 @@ g <- ggplot(data=events_january_bc) + geom_point(aes(x=Longitude, y=Latitude, co
 g <- g + theme_bw() + scale_x_continuous(limits = c(-125,-66), breaks = NULL)
 g <- g + scale_y_continuous(limits = c(20,55), breaks = NULL)
 g <- g + labs(x=NULL, y=NULL)
-g + ggtitle("Events Relative to Previous Januarys, January 2020") + scale_color_gradient2(low = 'red', mid = 'white', high = 'blue')
+g1 <- g + ggtitle("Events Relative to Previous Januarys, January 2020") + scale_color_gradient2(low = 'red', mid = 'white', high = 'blue')
 
 g <- ggplot(data=events_february_bc) + geom_point(aes(x=Longitude, y=Latitude, colour=decile), size=0.5)
 g <- g + theme_bw() + scale_x_continuous(limits = c(-125,-66), breaks = NULL)
 g <- g + scale_y_continuous(limits = c(20,55), breaks = NULL)
 g <- g + labs(x=NULL, y=NULL)
-g + ggtitle("Events Relative to Previous Februarys, February 2020") + scale_color_gradient2(low = 'red', mid = 'white', high = 'blue')
+g2 <- g + ggtitle("Events Relative to Previous Februarys, February 2020") + scale_color_gradient2(low = 'red', mid = 'white', high = 'blue')
 
 g <- ggplot(data=events_march_ac) + geom_point(aes(x=Longitude, y=Latitude, colour=decile), size=0.5)
 g <- g + theme_bw() + scale_x_continuous(limits = c(-125,-66), breaks = NULL)
 g <- g + scale_y_continuous(limits = c(20,55), breaks = NULL)
 g <- g + labs(x=NULL, y=NULL)
-g + ggtitle("Events Relative to Previous Marchs, March 2020") + scale_color_gradient2(low = 'red', mid = 'white', high = 'blue')
+g3 <- g + ggtitle("Events Relative to Previous Marchs, March 2020") + scale_color_gradient2(low = 'red', mid = 'white', high = 'blue')
 
 g <- ggplot(data=events_april_ac) + geom_point(aes(x=Longitude, y=Latitude, colour=decile), size=0.5)
 g <- g + theme_bw() + scale_x_continuous(limits = c(-125,-66), breaks = NULL)
 g <- g + scale_y_continuous(limits = c(20,55), breaks = NULL)
 g <- g + labs(x=NULL, y=NULL)
-g + ggtitle("Events Relative to Previous Aprils, April 2020") + scale_color_gradient2(low = 'red', mid = 'white', high = 'blue')
+g4 <- g + ggtitle("Events Relative to Previous Aprils, April 2020") + scale_color_gradient2(low = 'red', mid = 'white', high = 'blue')
 
 g <- ggplot(data=events_may_ac) + geom_point(aes(x=Longitude, y=Latitude, colour=decile), size=0.5)
 g <- g + theme_bw() + scale_x_continuous(limits = c(-125,-66), breaks = NULL)
 g <- g + scale_y_continuous(limits = c(20,55), breaks = NULL)
 g <- g + labs(x=NULL, y=NULL)
-g + ggtitle("Events Relative to Previous Mays, May 2020") + scale_color_gradient2(low = 'red', mid = 'white', high = 'blue')
+g5 <- g + ggtitle("Events Relative to Previous Mays, May 2020") + scale_color_gradient2(low = 'red', mid = 'white', high = 'blue')
 
 g <- ggplot(data=events_june_ac) + geom_point(aes(x=Longitude, y=Latitude, colour=decile), size=0.5)
 g <- g + theme_bw() + scale_x_continuous(limits = c(-125,-66), breaks = NULL)
 g <- g + scale_y_continuous(limits = c(20,55), breaks = NULL)
 g <- g + labs(x=NULL, y=NULL)
-g + ggtitle("Events Relative to Previous Junes, June 2020") + scale_color_gradient2(low = 'red', mid = 'white', high = 'blue')
+g6 <- g + ggtitle("Events Relative to Previous Junes, June 2020") + scale_color_gradient2(low = 'red', mid = 'white', high = 'blue')
 
 g <- ggplot(data=events_july_ac) + geom_point(aes(x=Longitude, y=Latitude, colour=decile), size=0.5)
 g <- g + theme_bw() + scale_x_continuous(limits = c(-125,-66), breaks = NULL)
 g <- g + scale_y_continuous(limits = c(20,55), breaks = NULL)
 g <- g + labs(x=NULL, y=NULL)
-g + ggtitle("Events Relative to Previous Julys, July 2020") + scale_color_gradient2(low = 'red', mid = 'white', high = 'blue')
+g7 <- g + ggtitle("Events Relative to Previous Julys, July 2020") + scale_color_gradient2(low = 'red', mid = 'white', high = 'blue')
 
 g <- ggplot(data=events_august_ac) + geom_point(aes(x=Longitude, y=Latitude, colour=decile), size=0.5)
 g <- g + theme_bw() + scale_x_continuous(limits = c(-125,-66), breaks = NULL)
 g <- g + scale_y_continuous(limits = c(20,55), breaks = NULL)
 g <- g + labs(x=NULL, y=NULL)
-g + ggtitle("Events Relative to Previous Augusts, August 2020") + scale_color_gradient2(low = 'red', mid = 'white', high = 'blue')
+g8 <- g + ggtitle("Events Relative to Previous Augusts, August 2020") + scale_color_gradient2(low = 'red', mid = 'white', high = 'blue')
+
+library(gridExtra)
+grid.arrange(g1, g2,
+             g3, g4,
+             g5, g6,
+             g7, g8,
+             nrow = 3)
+
 
 events_ac <- events_per_month_ac %>% group_by(ZIP) %>% summarize(events_change=sum(events_change))
 events_ac <- left_join(events_ac, zipcodes %>% dplyr::select(ZIP, Latitude, Longitude), by="ZIP")
@@ -513,28 +539,44 @@ ggplot(data=df %>%
                             Pool_Party = sum(Pool_Party),
                             Birthday_for_Teens = sum(Birthday_for_Teens),
                             Dinner_Party = sum(Dinner_Party),
-                            Birthday_Milestones = sum(Birthday_Milestones)
-           ), aes(x=date)) +
-    geom_line(aes(y = Birthday_for_Kids)) +
-    geom_line(aes(y = Graduation)) +
-    geom_line(aes(y = Religious)) +
-    geom_line(aes(y = Birthday_for_Him)) +
-    geom_line(aes(y = Birthday_for_Her)) +
-    geom_line(aes(y = Pool_Party)) +
-    geom_line(aes(y = Birthday_for_Teens)) +
-    geom_line(aes(y = Dinner_Party)) +
-    geom_line(aes(y = Birthday_Milestones)) +
+                            Birthday_Milestones = sum(Birthday_Milestones)) %>%
+           gather(key=`Event Type`,
+                  value=events,
+                  Birthday_for_Kids:Birthday_Milestones,
+                  factor_key=FALSE),
+       aes(x=date, y=events, group=`Event Type`, color=`Event Type`)) +
+    geom_line() +
     geom_vline(xintercept=as.Date("2020-03-01")) +
-    scale_fill_manual() +
-    # scale_color_manual(labels = c("Birthday_for_Kids", "Graduation",
-    #                               "Religious", "Birthday_for_Him",
-    #                               "Birthday_for_Her", "Pool_Party",
-    #                               "Birthday_for_Teens", "Dinner_Party",
-    #                               "Birthday_Milestones"),
-    #                    values = c("red", "dark blue",
-    #                               "yellow", "dark green",
-    #                               "orange", "pink",
-    #                               "light blue", "purple",
-    #                               "light green")) +
     labs(y = "Events", x = "Date") +
-    ggtitle("Physical and Virtual Events over Time")
+    ggtitle("Events Types over Time") +
+    scale_y_continuous(labels = comma)
+
+ggplot(data=df_bc %>%
+           dplyr::group_by(month) %>%
+           dplyr::summarise(Birthday_for_Kids = sum(Birthday_for_Kids),
+                            Graduation = sum(Graduation),
+                            Religious = sum(Religious),
+                            Birthday_for_Him = sum(Birthday_for_Him),
+                            Birthday_for_Her = sum(Birthday_for_Her),
+                            Pool_Party = sum(Pool_Party),
+                            Birthday_for_Teens = sum(Birthday_for_Teens),
+                            Dinner_Party = sum(Dinner_Party),
+                            Birthday_Milestones = sum(Birthday_Milestones)) %>%
+           gather(key=`Event Type`,
+                  value=events,
+                  Birthday_for_Kids:Birthday_Milestones,
+                  factor_key=FALSE),
+       aes(x=month, y=events, group=`Event Type`, color=`Event Type`)) +
+    geom_line() +
+    labs(y = "Events", x = "Date") +
+    ggtitle("Events by Type by Month, before Covid") +
+    scale_y_continuous(labels = comma) +
+    scale_x_discrete(name ="Month",
+                     limits=as.character(c(1:12)))
+
+####################################################################
+# TODO
+####################################################################
+
+# Event types over time
+# Proportion of event types per month
